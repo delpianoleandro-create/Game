@@ -2,111 +2,114 @@ export class DungeonGenerator {
     constructor(scene, assetManager) {
         this.scene = scene;
         this.assets = assetManager; 
-        this.walls = [];
-        this.chests = [];
         
-        // Configuraciones de Mundo Abierto / Laberinto
-        this.roomSize = 30; // Tamaño de cada habitación
+        // Configuraciones del Mundo Infinito
+        this.roomSize = 30; // Tamaño de cada Chunk (Parcela)
         this.wallThickness = 2;
-        this.doorSize = 8; // Ancho del pasillo que conecta salas
+        this.doorSize = 10; // Pasillos anchos
+        
+        // Memoria del mundo
+        this.generatedChunks = new Set(); // Guarda qué parcelas ya se crearon "X,Z"
+        this.chests = [];
+        this.enemiesData = []; // Para spawnear enemigos en nuevos chunks
     }
 
+    // Ya no genera todo el mapa de golpe, solo prepara el sistema
     generate() {
-        // En lugar de una sola sala, vamos a generar un "Mundo" de 3x3 habitaciones
-        const gridSize = 3; 
-        const offset = Math.floor(gridSize / 2);
+        console.log("Iniciando Mundo Procedural Infinito...");
+        // El primer chunk se genera en (0,0) automáticamente cuando el jugador caiga allí
+    }
 
-        // Generar un suelo global gigante para todo el mundo
-        const worldSize = this.roomSize * gridSize;
-        const ground = BABYLON.MeshBuilder.CreateGround("ground", { width: worldSize, height: worldSize }, this.scene);
-        ground.material = this.assets.getMaterial("floor");
-        ground.checkCollisions = true; 
+    // Se llama en cada fotograma para revisar dónde está el jugador
+    update(playerPos, enemiesArray) {
+        // ¿En qué coordenada de Chunk está el jugador ahora mismo?
+        const currentChunkX = Math.floor((playerPos.x + this.roomSize / 2) / this.roomSize);
+        const currentChunkZ = Math.floor((playerPos.z + this.roomSize / 2) / this.roomSize);
 
-        // Recorrer la cuadrícula y crear las habitaciones
-        for (let x = 0; x < gridSize; x++) {
-            for (let z = 0; z < gridSize; z++) {
-                // Calcular la posición central real (3D) de esta habitación
-                const roomX = (x - offset) * this.roomSize;
-                const roomZ = (z - offset) * this.roomSize;
-                
-                // Saber si es una habitación del borde del mundo
-                const isNorthEdge = (z === gridSize - 1);
-                const isSouthEdge = (z === 0);
-                const isEastEdge = (x === gridSize - 1);
-                const isWestEdge = (x === 0);
+        // Optimización: Si el jugador sigue en la misma parcela, no recalcular todo el vecindario
+        if (this.lastChunkX === currentChunkX && this.lastChunkZ === currentChunkZ) return;
+        
+        this.lastChunkX = currentChunkX;
+        this.lastChunkZ = currentChunkZ;
 
-                // Construir las paredes de esta habitación, dejando huecos para puertas si no es el borde exterior
-                this.buildRoom(roomX, roomZ, isNorthEdge, isSouthEdge, isEastEdge, isWestEdge);
-                
-                // Decorar y poblar la habitación (Si no es la sala de inicio del jugador)
-                if (x !== offset || z !== offset) {
-                    this.populateRoom(roomX, roomZ);
+        // Generar un radio de 3x3 Chunks alrededor del jugador (Vision Distance)
+        const renderDistance = 1; // 1 chunk de distancia en todas direcciones (9 chunks activos a la vez)
+
+        for (let x = -renderDistance; x <= renderDistance; x++) {
+            for (let z = -renderDistance; z <= renderDistance; z++) {
+                const targetX = currentChunkX + x;
+                const targetZ = currentChunkZ + z;
+                const chunkKey = `${targetX},${targetZ}`;
+
+                // Si este Chunk nunca ha sido explorado, ¡Constrúyelo!
+                if (!this.generatedChunks.has(chunkKey)) {
+                    this.buildChunk(targetX, targetZ, enemiesArray);
+                    this.generatedChunks.add(chunkKey);
                 }
             }
         }
     }
 
-    buildRoom(cx, cz, edgeN, edgeS, edgeE, edgeW) {
+    buildChunk(chunkX, chunkZ, enemiesArray) {
+        // Centro real en el mundo 3D
+        const cx = chunkX * this.roomSize;
+        const cz = chunkZ * this.roomSize;
+
+        // 1. Construir Suelo Infinito para este chunk
+        const ground = BABYLON.MeshBuilder.CreateGround(`ground_${chunkX}_${chunkZ}`, { width: this.roomSize, height: this.roomSize }, this.scene);
+        ground.position.set(cx, 0, cz);
+        ground.material = this.assets.getMaterial("floor");
+        ground.checkCollisions = true;
+
+        // 2. Construir Paredes Perimetrales del Chunk (Siempre con puertas/pasillos en los 4 lados para que sea infinito)
         const halfRoom = this.roomSize / 2;
         const wThick = this.wallThickness;
-        const h = 6; // Altura de paredes
+        const h = 6; 
+        const sideLen = (this.roomSize - this.doorSize) / 2;
 
-        // Norte (Si es borde exterior, pared completa. Si no, pared partida por la puerta)
-        if (edgeN) {
-            this.createWall("wN_Full", this.roomSize, h, wThick, cx, 3, cz + halfRoom);
-        } else {
-            const sideLen = (this.roomSize - this.doorSize) / 2;
-            this.createWall("wN_L", sideLen, h, wThick, cx - this.roomSize/4 - this.doorSize/4, 3, cz + halfRoom);
-            this.createWall("wN_R", sideLen, h, wThick, cx + this.roomSize/4 + this.doorSize/4, 3, cz + halfRoom);
-            // Antorchas en las puertas
-            this.createTorch(`tN_${cx}_${cz}`, cx - this.doorSize/2, 2.5, cz + halfRoom - 0.5, "N");
+        // Muro Norte (Con puerta central)
+        this.createWall(`wN_L_${chunkX}_${chunkZ}`, sideLen, h, wThick, cx - this.roomSize/4 - this.doorSize/4, 3, cz + halfRoom);
+        this.createWall(`wN_R_${chunkX}_${chunkZ}`, sideLen, h, wThick, cx + this.roomSize/4 + this.doorSize/4, 3, cz + halfRoom);
+        
+        // Muro Sur
+        this.createWall(`wS_L_${chunkX}_${chunkZ}`, sideLen, h, wThick, cx - this.roomSize/4 - this.doorSize/4, 3, cz - halfRoom);
+        this.createWall(`wS_R_${chunkX}_${chunkZ}`, sideLen, h, wThick, cx + this.roomSize/4 + this.doorSize/4, 3, cz - halfRoom);
+        
+        // Muro Este
+        this.createWall(`wE_B_${chunkX}_${chunkZ}`, wThick, h, sideLen, cx + halfRoom, 3, cz - this.roomSize/4 - this.doorSize/4);
+        this.createWall(`wE_T_${chunkX}_${chunkZ}`, wThick, h, sideLen, cx + halfRoom, 3, cz + this.roomSize/4 + this.doorSize/4);
+
+        // Muro Oeste
+        this.createWall(`wW_B_${chunkX}_${chunkZ}`, wThick, h, sideLen, cx - halfRoom, 3, cz - this.roomSize/4 - this.doorSize/4);
+        this.createWall(`wW_T_${chunkX}_${chunkZ}`, wThick, h, sideLen, cx - halfRoom, 3, cz + this.roomSize/4 + this.doorSize/4);
+
+        // 3. Iluminación Procedural (Antorchas en los cruces)
+        // Ponemos una antorcha en el pilar Noroeste de esta sala
+        this.createTorch(`torch_${chunkX}_${chunkZ}`, cx - halfRoom + 1, 2.5, cz + halfRoom - 1, "S");
+
+        // 4. Generación de Contenido Aleatorio (RNG)
+        // No generamos enemigos ni trampas en el Chunk de inicio (0,0)
+        if (chunkX === 0 && chunkZ === 0) return;
+
+        // Generar Pilares o Puentes interiores
+        if (Math.random() > 0.4) {
+            // Pilar gigante en el centro de la sala
+            this.createWall(`pillar_${chunkX}_${chunkZ}`, 4, 6, 4, cx, 3, cz);
         }
 
-        // Sur
-        if (edgeS) {
-            this.createWall("wS_Full", this.roomSize, h, wThick, cx, 3, cz - halfRoom);
-        } else {
-            const sideLen = (this.roomSize - this.doorSize) / 2;
-            this.createWall("wS_L", sideLen, h, wThick, cx - this.roomSize/4 - this.doorSize/4, 3, cz - halfRoom);
-            this.createWall("wS_R", sideLen, h, wThick, cx + this.roomSize/4 + this.doorSize/4, 3, cz - halfRoom);
-        }
-
-        // Este
-        if (edgeE) {
-            this.createWall("wE_Full", wThick, h, this.roomSize, cx + halfRoom, 3, cz);
-        } else {
-            const sideLen = (this.roomSize - this.doorSize) / 2;
-            this.createWall("wE_B", wThick, h, sideLen, cx + halfRoom, 3, cz - this.roomSize/4 - this.doorSize/4);
-            this.createWall("wE_T", wThick, h, sideLen, cx + halfRoom, 3, cz + this.roomSize/4 + this.doorSize/4);
-            // Antorchas
-            this.createTorch(`tE_${cx}_${cz}`, cx + halfRoom - 0.5, 2.5, cz - this.doorSize/2, "E");
-        }
-
-        // Oeste
-        if (edgeW) {
-            this.createWall("wW_Full", wThick, h, this.roomSize, cx - halfRoom, 3, cz);
-        } else {
-            const sideLen = (this.roomSize - this.doorSize) / 2;
-            this.createWall("wW_B", wThick, h, sideLen, cx - halfRoom, 3, cz - this.roomSize/4 - this.doorSize/4);
-            this.createWall("wW_T", wThick, h, sideLen, cx - halfRoom, 3, cz + this.roomSize/4 + this.doorSize/4);
-        }
-    }
-
-    populateRoom(cx, cz) {
-        // Generar un pilar central o ruinas en cada sala para darle cobertura
-        const hasPillar = Math.random() > 0.5;
-        if (hasPillar) {
-            this.createWall(`pillar_${cx}_${cz}`, 3, 5, 3, cx, 2.5, cz);
-        }
-
-        // Generar cofre aleatorio en esquinas
-        const spawnChest = Math.random() > 0.7; // 30% de probabilidad de cofre por sala
-        if (spawnChest) {
-            // Posición aleatoria en un cuadrante de la sala (Lejos del centro)
-            const offsetX = (Math.random() > 0.5 ? 1 : -1) * (this.roomSize/2 - 4);
-            const offsetZ = (Math.random() > 0.5 ? 1 : -1) * (this.roomSize/2 - 4);
+        // 20% de probabilidad de que haya un Cofre con tesoro
+        if (Math.random() > 0.8) {
+            const offsetX = (Math.random() > 0.5 ? 1 : -1) * (this.roomSize/2 - 5);
+            const offsetZ = (Math.random() > 0.5 ? 1 : -1) * (this.roomSize/2 - 5);
             const itemType = Math.random() > 0.5 ? "espada" : "escudo";
-            this.createChest(`chest_${cx}_${cz}`, itemType, cx + offsetX, 0.5, cz + offsetZ);
+            this.createChest(`chest_${chunkX}_${cz}`, itemType, cx + offsetX, 0.5, cz + offsetZ);
+        }
+
+        // 40% de probabilidad de generar una Rata de Sombra en este nuevo Chunk
+        if (Math.random() > 0.6 && enemiesArray) {
+            const offsetX = (Math.random() - 0.5) * 15;
+            const offsetZ = (Math.random() - 0.5) * 15;
+            this.enemiesData.push({ x: cx + offsetX, z: cz + offsetZ }); // Guardamos el dato para que Scene lo instancie
         }
     }
 
@@ -122,7 +125,7 @@ export class DungeonGenerator {
         const light = new BABYLON.PointLight(`${id}_light`, new BABYLON.Vector3(x, y + 0.6, z), this.scene);
         light.diffuse = new BABYLON.Color3(1, 0.7, 0.2); 
         light.intensity = 1.5; 
-        light.range = 15;
+        light.range = 20;
 
         if (!this.scene.torchLights) this.scene.torchLights = [];
         this.scene.torchLights.push(light);
@@ -133,7 +136,6 @@ export class DungeonGenerator {
         wall.position.set(x, y, z);
         wall.material = this.assets.getMaterial("wall");
         wall.checkCollisions = true; 
-        this.walls.push(wall);
     }
 
     createChest(name, itemType, x, y, z) {
