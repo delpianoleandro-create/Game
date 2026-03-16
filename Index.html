@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Mini Juego HTML</title>
+  <style>
+    body { margin: 0; background: #222; }
+    canvas { display: block; margin: auto; background: #eee; }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="400" height="400"></canvas>
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    let player = { x: 180, y: 350, w: 40, h: 40, color: "blue" };
+    let obstacles = [];
+    let score = 0;
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "ArrowLeft" && player.x > 0) player.x -= 20;
+      if (e.key === "ArrowRight" && player.x < canvas.width - player.w) player.x += 20;
+    });
+
+    function spawnObstacle() {
+      let x = Math.floor(Math.random() * (canvas.width - 40));
+      obstacles.push({ x: x, y: -40, w: 40, h: 40, color: "red" });
+    }
+
+    function update() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Dibujar jugador
+      ctx.fillStyle = player.color;
+      ctx.fillRect(player.x, player.y, player.w, player.h);
+
+      // Dibujar obstáculos
+      for (let i = 0; i < obstacles.length; i++) {
+        let o = obstacles[i];
+        o.y += 5;
+        ctx.fillStyle = o.color;
+        ctx.fillRect(o.x, o.y, o.w, o.h);
+
+        // Colisión
+        if (o.y + o.h > player.y &&
+            o.x < player.x + player.w &&
+            o.x + o.w > player.x) {
+          alert("¡Game Over! Puntuación: " + score);
+          document.location.reload();
+        }
+      }
+
+      // Eliminar obstáculos que salen
+      obstacles = obstacles.filter(o => o.y < canvas.height);
+
+      // Puntuación
+      ctx.fillStyle = "black";
+      ctx.font = "20px Arial";
+      ctx.fillText("Score: " + score, 10, 20);
+
+      score++;
+    }
+
+    setInterval(update, 50);
+    setInterval(spawnObstacle, 1000);
+  </script>
+</body>
+</html>
