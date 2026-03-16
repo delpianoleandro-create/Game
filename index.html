@@ -63,7 +63,7 @@ const createScene = () => {
   const ground = BABYLON.MeshBuilder.CreateGround("ground", {width:60, height:40}, scene);
 
   const player = BABYLON.MeshBuilder.CreateBox("player", {size:2}, scene);
-  player.position.y = 1;
+  player.position.set(0,1,10);
   player.material = new BABYLON.StandardMaterial("pmat", scene);
   player.material.diffuseColor = new BABYLON.Color3(0,0,1);
 
@@ -80,7 +80,6 @@ const createScene = () => {
   let score = 0;
   const scoreDisplay = document.getElementById("score");
 
-  // Pelota con física
   let ballVel = new BABYLON.Vector3(0,0,0);
 
   // Joystick
@@ -100,7 +99,8 @@ const createScene = () => {
     if (dist > maxDist) { dx *= maxDist/dist; dy *= maxDist/dist; }
     stick.style.left = (dx + 70) + "px";
     stick.style.top = (dy + 70) + "px";
-    joyX = dx/80; joyY = dy/80;
+    joyX = dx/80;
+    joyY = dy/80;
   }, { passive:false });
 
   joystick.addEventListener("touchend", e => {
@@ -113,20 +113,24 @@ const createScene = () => {
   document.getElementById("kick").addEventListener("touchstart", e => {
     e.preventDefault();
     if (BABYLON.Vector3.Distance(player.position, ball.position) < 3) {
-      // dirección hacia adelante según cámara
       const forward = camera.getForwardRay().direction;
       ballVel.addInPlace(forward.scale(1.2));
     }
   }, { passive:false });
 
-  // Loop FPS
+  // Loop
   scene.onBeforeRenderObservable.add(() => {
     // Movimiento relativo a cámara
-    const forward = camera.getForwardRay().direction;
-    const right = camera.getForwardRay().direction.cross(BABYLON.Vector3.Up()).normalize();
+    const forward = camera.getForwardRay().direction.clone();
+    forward.y = 0; forward.normalize();
+    const right = BABYLON.Vector3.Cross(forward, BABYLON.Vector3.Up()).normalize();
 
     const moveVec = forward.scale(-joyY*0.5).add(right.scale(joyX*0.5));
     player.position.addInPlace(moveVec);
+
+    // Pegado al piso
+    player.position.y = 1;
+    ball.position.y = 0.5;
 
     // Límites cancha
     player.position.x = Math.max(-29, Math.min(29, player.position.x));
