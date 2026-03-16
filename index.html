@@ -4,60 +4,38 @@
   <meta charset="utf-8">
   <title>Fútbol 3D Móvil</title>
   <style>
-    html, body {
-      width:100%; height:100%; margin:0; overflow:hidden;
-      touch-action: none;
-    }
+    html, body { width:100%; height:100%; margin:0; overflow:hidden; touch-action:none; }
     #renderCanvas { width:100%; height:100%; touch-action:none; }
 
     #hud {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      background: rgba(0,0,0,0.5);
-      color: white;
-      padding: 5px 10px;
-      border-radius: 5px;
+      position: absolute; top: 10px; left: 10px;
+      background: rgba(0,0,0,0.5); color: white;
+      padding: 5px 10px; border-radius: 5px;
       font-family: Arial, sans-serif;
     }
 
     .joystick {
-      position: absolute;
-      bottom: 80px;
-      left: 80px;
-      width: 180px;
-      height: 180px;
+      position: absolute; bottom: 80px; left: 80px;
+      width: 180px; height: 180px;
       background: rgba(100,100,100,0.3);
-      border-radius: 50%;
-      touch-action: none;
+      border-radius: 50%; touch-action:none;
     }
     .stick {
-      position: absolute;
-      top: 70px;
-      left: 70px;
-      width: 40px;
-      height: 40px;
+      position: absolute; top: 70px; left: 70px;
+      width: 40px; height: 40px;
       background: rgba(200,200,200,0.8);
       border-radius: 50%;
     }
 
     .buttons {
-      position: absolute;
-      bottom: 80px;
-      right: 80px;
-      display: flex;
-      flex-direction: column;
-      gap: 25px;
+      position: absolute; bottom: 80px; right: 80px;
+      display: flex; flex-direction: column; gap: 25px;
     }
     .btn {
-      background: #444;
-      color: white;
-      font-size: 26px;
-      padding: 25px;
-      border-radius: 50%;
-      border: none;
-      width: 90px;
-      height: 90px;
+      background: #444; color: white;
+      font-size: 26px; padding: 25px;
+      border-radius: 50%; border: none;
+      width: 90px; height: 90px;
     }
   </style>
   <script src="https://cdn.babylonjs.com/babylon.js"></script>
@@ -66,127 +44,118 @@
 <canvas id="renderCanvas"></canvas>
 <div id="hud">⚽ Goles: <span id="score">0</span></div>
 
-<div class="joystick" id="joystick">
-  <div class="stick" id="stick"></div>
-</div>
-
-<div class="buttons">
-  <button class="btn" id="kick">🥅</button>
-</div>
+<div class="joystick" id="joystick"><div class="stick" id="stick"></div></div>
+<div class="buttons"><button class="btn" id="kick">🥅</button></div>
 
 <script>
-  const canvas = document.getElementById("renderCanvas");
-  const engine = new BABYLON.Engine(canvas, true);
+const canvas = document.getElementById("renderCanvas");
+const engine = new BABYLON.Engine(canvas, true);
 
-  const createScene = () => {
-    const scene = new BABYLON.Scene(engine);
-    scene.clearColor = new BABYLON.Color3(0.5, 0.8, 1);
+const createScene = () => {
+  const scene = new BABYLON.Scene(engine);
+  scene.clearColor = new BABYLON.Color3(0.5,0.8,1);
 
-    const camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 30, BABYLON.Vector3.Zero(), scene);
-    camera.attachControl(canvas, true);
+  const camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 30, BABYLON.Vector3.Zero(), scene);
+  camera.attachControl(canvas, true);
 
-    const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0,1,0), scene);
+  const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0,1,0), scene);
 
-    const ground = BABYLON.MeshBuilder.CreateGround("ground", {width:60, height:40}, scene);
+  const ground = BABYLON.MeshBuilder.CreateGround("ground", {width:60, height:40}, scene);
 
-    const player = BABYLON.MeshBuilder.CreateBox("player", {size:2}, scene);
-    player.position.y = 1;
-    player.material = new BABYLON.StandardMaterial("pmat", scene);
-    player.material.diffuseColor = new BABYLON.Color3(0,0,1);
+  const player = BABYLON.MeshBuilder.CreateBox("player", {size:2}, scene);
+  player.position.y = 1;
+  player.material = new BABYLON.StandardMaterial("pmat", scene);
+  player.material.diffuseColor = new BABYLON.Color3(0,0,1);
 
-    const ball = BABYLON.MeshBuilder.CreateSphere("ball", {diameter:1}, scene);
-    ball.position.set(0,0.5,0);
-    ball.material = new BABYLON.StandardMaterial("bmat", scene);
-    ball.material.diffuseColor = new BABYLON.Color3(1,1,1);
+  const ball = BABYLON.MeshBuilder.CreateSphere("ball", {diameter:1}, scene);
+  ball.position.set(0,0.5,0);
+  ball.material = new BABYLON.StandardMaterial("bmat", scene);
+  ball.material.diffuseColor = new BABYLON.Color3(1,1,1);
 
-    const goal = BABYLON.MeshBuilder.CreateBox("goal", {width:10, height:5, depth:1}, scene);
-    goal.position.set(0,2,-18);
-    goal.material = new BABYLON.StandardMaterial("gmat", scene);
-    goal.material.diffuseColor = new BABYLON.Color3(0,1,0);
+  const goal = BABYLON.MeshBuilder.CreateBox("goal", {width:10, height:5, depth:1}, scene);
+  goal.position.set(0,2,-18);
+  goal.material = new BABYLON.StandardMaterial("gmat", scene);
+  goal.material.diffuseColor = new BABYLON.Color3(0,1,0);
 
-    let score = 0;
-    const scoreDisplay = document.getElementById("score");
+  let score = 0;
+  const scoreDisplay = document.getElementById("score");
 
-    // Pelota con física simple
-    let ballVel = new BABYLON.Vector3(0,0,0);
+  // Pelota con física
+  let ballVel = new BABYLON.Vector3(0,0,0);
 
-    // Joystick
-    const joystick = document.getElementById("joystick");
-    const stick = document.getElementById("stick");
-    let centerX = joystick.offsetLeft + joystick.offsetWidth/2;
-    let centerY = joystick.offsetTop + joystick.offsetHeight/2;
-    let moveX = 0, moveZ = 0;
+  // Joystick
+  const joystick = document.getElementById("joystick");
+  const stick = document.getElementById("stick");
+  let centerX = joystick.offsetLeft + joystick.offsetWidth/2;
+  let centerY = joystick.offsetTop + joystick.offsetHeight/2;
+  let joyX = 0, joyY = 0;
 
-    joystick.addEventListener("touchmove", e => {
-      e.preventDefault();
-      const touch = e.touches[0];
-      let dx = touch.clientX - centerX;
-      let dy = touch.clientY - centerY;
-      let dist = Math.sqrt(dx*dx + dy*dy);
-      let maxDist = 80;
-      if (dist > maxDist) {
-        dx *= maxDist/dist;
-        dy *= maxDist/dist;
-      }
-      stick.style.left = (dx + 70) + "px";
-      stick.style.top = (dy + 70) + "px";
-      // Corrección: arriba = avanzar
-      moveX = dx/80 * 0.4;
-      moveZ = dy/80 * 0.4;
-    }, { passive:false });
+  joystick.addEventListener("touchmove", e => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    let dx = touch.clientX - centerX;
+    let dy = touch.clientY - centerY;
+    let dist = Math.sqrt(dx*dx + dy*dy);
+    let maxDist = 80;
+    if (dist > maxDist) { dx *= maxDist/dist; dy *= maxDist/dist; }
+    stick.style.left = (dx + 70) + "px";
+    stick.style.top = (dy + 70) + "px";
+    joyX = dx/80; joyY = dy/80;
+  }, { passive:false });
 
-    joystick.addEventListener("touchend", e => {
-      e.preventDefault();
-      stick.style.left = "70px";
-      stick.style.top = "70px";
-      moveX = 0; moveZ = 0;
-    }, { passive:false });
+  joystick.addEventListener("touchend", e => {
+    e.preventDefault();
+    stick.style.left = "70px"; stick.style.top = "70px";
+    joyX = 0; joyY = 0;
+  }, { passive:false });
 
-    // Botón patear
-    document.getElementById("kick").addEventListener("touchstart", e => {
-      e.preventDefault();
-      if (BABYLON.Vector3.Distance(player.position, ball.position) < 3) {
-        // fuerza hacia adelante según posición del jugador
-        ballVel.z -= 0.8;
-        ballVel.x += (player.position.x - ball.position.x) * 0.1;
-      }
-    }, { passive:false });
+  // Botón patear
+  document.getElementById("kick").addEventListener("touchstart", e => {
+    e.preventDefault();
+    if (BABYLON.Vector3.Distance(player.position, ball.position) < 3) {
+      // dirección hacia adelante según cámara
+      const forward = camera.getForwardRay().direction;
+      ballVel.addInPlace(forward.scale(1.2));
+    }
+  }, { passive:false });
 
-    // Loop FPS
-    scene.onBeforeRenderObservable.add(() => {
-      // Movimiento jugador
-      player.position.x += moveX;
-      player.position.z += moveZ;
+  // Loop FPS
+  scene.onBeforeRenderObservable.add(() => {
+    // Movimiento relativo a cámara
+    const forward = camera.getForwardRay().direction;
+    const right = camera.getForwardRay().direction.cross(BABYLON.Vector3.Up()).normalize();
 
-      // Límites cancha
-      player.position.x = Math.max(-29, Math.min(29, player.position.x));
-      player.position.z = Math.max(-19, Math.min(19, player.position.z));
+    const moveVec = forward.scale(-joyY*0.5).add(right.scale(joyX*0.5));
+    player.position.addInPlace(moveVec);
 
-      // Movimiento pelota con fricción
-      ball.position.addInPlace(ballVel);
-      ballVel.scaleInPlace(0.95); // fricción
+    // Límites cancha
+    player.position.x = Math.max(-29, Math.min(29, player.position.x));
+    player.position.z = Math.max(-19, Math.min(19, player.position.z));
 
-      // Límites pelota
-      ball.position.x = Math.max(-29, Math.min(29, ball.position.x));
-      ball.position.z = Math.max(-19, Math.min(19, ball.position.z));
+    // Pelota física
+    ball.position.addInPlace(ballVel);
+    ballVel.scaleInPlace(0.95);
 
-      // Gol
-      if (ball.position.z < -17 && Math.abs(ball.position.x) < 5) {
-        score++;
-        scoreDisplay.textContent = score;
-        ball.position.set(0,0.5,0);
-        ballVel = new BABYLON.Vector3(0,0,0);
-      }
+    ball.position.x = Math.max(-29, Math.min(29, ball.position.x));
+    ball.position.z = Math.max(-19, Math.min(19, ball.position.z));
 
-      camera.target = player.position;
-    });
+    // Gol
+    if (ball.position.z < -17 && Math.abs(ball.position.x) < 5) {
+      score++;
+      scoreDisplay.textContent = score;
+      ball.position.set(0,0.5,0);
+      ballVel = new BABYLON.Vector3(0,0,0);
+    }
 
-    return scene;
-  };
+    camera.target = player.position;
+  });
 
-  const scene = createScene();
-  engine.runRenderLoop(() => scene.render());
-  window.addEventListener("resize", () => engine.resize());
+  return scene;
+};
+
+const scene = createScene();
+engine.runRenderLoop(() => scene.render());
+window.addEventListener("resize", () => engine.resize());
 </script>
 </body>
 </html>
