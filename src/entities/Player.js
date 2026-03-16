@@ -5,11 +5,9 @@ export class Player {
         this.hud = hud;
         this.dialogueManager = dialogueManager;
         
-        // El jugador es temporalmente una cápsula
         this.mesh = BABYLON.MeshBuilder.CreateCapsule("player", { radius: 0.5, height: 2 }, scene);
         this.mesh.position.y = 1;
         
-        // Físicas: Darle masa sólida al jugador
         this.mesh.checkCollisions = true; 
         this.mesh.ellipsoid = new BABYLON.Vector3(0.5, 1, 0.5); 
         this.mesh.ellipsoidOffset = new BABYLON.Vector3(0, 1, 0);
@@ -23,15 +21,11 @@ export class Player {
         this.isDefending = false;
         this.canMove = true;
         
-        // Sistema de Inventario
         this.inventory = [];
         this.hasSword = false;
         this.hasShield = false;
         
-        // Modelos visuales de las armas
         this.createVisualWeapons();
-        
-        // Orientación independiente
         this.mesh.rotationQuaternion = BABYLON.Quaternion.Identity();
     }
 
@@ -61,48 +55,8 @@ export class Player {
     update(chests, enemies) {
         if (!this.canMove) return;
 
-        const camera = this.scene.activeCamera;
-        if (!camera) return;
-
-        // 1. ROTACIÓN SHOOTER: El personaje siempre se orienta hacia donde mira la cámara
-        // Obtenemos el vector "Adelante" de la cámara
-        const cameraForward = camera.getForwardRay().direction;
-        // Calculamos el ángulo en el plano XZ (suelo)
-        const targetRotationY = Math.atan2(cameraForward.x, cameraForward.z);
-        
-        // Sincronizar rotación del personaje con la cámara
-        this.mesh.rotation.y = targetRotationY;
-
-        // 2. TRASLACIÓN: Movimiento relativo a la rotación actual (Strafing)
-        if (this.input.joyX !== 0 || this.input.joyY !== 0) {
-            if (!this.isDefending) {
-                // Vector Adelante del personaje
-                const forward = new BABYLON.Vector3(
-                    Math.sin(this.mesh.rotation.y),
-                    0,
-                    Math.cos(this.mesh.rotation.y)
-                );
-                
-                // Vector Derecha del personaje
-                const right = new BABYLON.Vector3(
-                    Math.cos(this.mesh.rotation.y),
-                    0,
-                    -Math.sin(this.mesh.rotation.y)
-                );
-                
-                // Combinar ejes del joystick para movimiento lateral o frontal
-                const moveDirection = right.scale(this.input.joyX).add(forward.scale(this.input.joyY));
-                
-                if (moveDirection.lengthSquared() > 0) {
-                    moveDirection.normalize().scaleInPlace(this.speed);
-                    moveDirection.y = -0.2; // Gravedad constante
-                    this.mesh.moveWithCollisions(moveDirection);
-                }
-            }
-        } else {
-            // Aplicar gravedad siempre
-            this.mesh.moveWithCollisions(new BABYLON.Vector3(0, -0.2, 0));
-        }
+        // NOTA: El movimiento físico del jugador y la cámara ahora está delegado 
+        // en src/controllers/ (TopDownController.js o ShooterController.js)
 
         // Acciones y Combate
         if (this.input.actionA && !this.isAttacking && !this.isDefending) {
