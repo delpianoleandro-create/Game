@@ -1,69 +1,62 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Juego 3D Móvil Mejorado</title>
-  <style>
-    body { margin: 0; overflow: hidden; }
-    canvas { display: block; }
-  </style>
+  <meta charset="utf-8">
+  <title>Mundo Abierto 3D</title>
+  <style>html, body {width:100%;height:100%;margin:0;overflow:hidden;}</style>
+  <script src="https://cdn.babylonjs.com/babylon.js"></script>
 </head>
 <body>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-  <script>
-    // Escena y cámara
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(
-      60, window.innerWidth / window.innerHeight, 0.1, 1000
-    );
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
+<canvas id="renderCanvas"></canvas>
+<script>
+  const canvas = document.getElementById("renderCanvas");
+  const engine = new BABYLON.Engine(canvas, true);
+
+  const createScene = () => {
+    const scene = new BABYLON.Scene(engine);
+    scene.clearColor = new BABYLON.Color3(0.5, 0.8, 1);
+
+    // Cámara en tercera persona
+    const camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 20, BABYLON.Vector3.Zero(), scene);
+    camera.attachControl(canvas, true);
 
     // Luz
-    const light = new THREE.DirectionalLight(0xffffff, 1);
-    light.position.set(5, 10, 5);
-    scene.add(light);
+    const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0,1,0), scene);
 
-    // Jugador (cubo azul)
-    const playerGeometry = new THREE.BoxGeometry(1, 1, 1);
-    const playerMaterial = new THREE.MeshPhongMaterial({ color: 0x0000ff });
-    const player = new THREE.Mesh(playerGeometry, playerMaterial);
-    player.position.set(0, -2, 0);
-    scene.add(player);
+    // Terreno
+    const ground = BABYLON.MeshBuilder.CreateGround("ground", {width:50, height:50}, scene);
 
-    // Obstáculo (cubo rojo)
-    const obstacleGeometry = new THREE.BoxGeometry(1, 1, 1);
-    const obstacleMaterial = new THREE.MeshPhongMaterial({ color: 0xff0000 });
-    const obstacle = new THREE.Mesh(obstacleGeometry, obstacleMaterial);
-    obstacle.position.set(0, 3, 0);
-    scene.add(obstacle);
+    // Personaje jugador
+    const player = BABYLON.MeshBuilder.CreateBox("player", {size:2}, scene);
+    player.position.y = 1;
+    player.material = new BABYLON.StandardMaterial("pmat", scene);
+    player.material.diffuseColor = new BABYLON.Color3(0,0,1);
 
-    // Cámara en perspectiva lejana
-    camera.position.set(0, 2, 6); // más lejos y arriba
-    camera.lookAt(0, 0, 0);
+    // NPC
+    const npc = BABYLON.MeshBuilder.CreateBox("npc", {size:2}, scene);
+    npc.position.set(5,1,5);
+    npc.material = new BABYLON.StandardMaterial("nmat", scene);
+    npc.material.diffuseColor = new BABYLON.Color3(1,0,0);
 
-    // Animación
-    function animate() {
-      requestAnimationFrame(animate);
-      obstacle.position.y -= 0.05;
-      if (obstacle.position.y < -3) obstacle.position.y = 3;
-      renderer.render(scene, camera);
-    }
-    animate();
-
-    // Controles táctiles: izquierda/derecha
+    // Controles táctiles
+    let moveDir = 0;
     window.addEventListener("touchstart", e => {
-      if (e.touches[0].clientX < window.innerWidth / 2) player.position.x -= 0.2;
-      else player.position.x += 0.2;
+      if (e.touches[0].clientX < window.innerWidth/2) moveDir = -0.2;
+      else moveDir = 0.2;
+    });
+    window.addEventListener("touchend", () => moveDir = 0);
+
+    scene.onBeforeRenderObservable.add(() => {
+      player.position.x += moveDir;
+      camera.target = player.position; // cámara sigue al jugador
     });
 
-    // Ajustar tamaño al cambiar pantalla
-    window.addEventListener("resize", () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-  </script>
+    return scene;
+  };
+
+  const scene = createScene();
+  engine.runRenderLoop(() => scene.render());
+  window.addEventListener("resize", () => engine.resize());
+</script>
 </body>
 </html>
