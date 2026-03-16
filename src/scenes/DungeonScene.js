@@ -128,16 +128,19 @@ export class DungeonScene {
                     playerLight.intensity = 0.9 + Math.random() * 0.3;
                 }
 
-                // --- CORRECCIÓN LINTERNA ABSOLUTA ---
-                // Sincronizar la dirección de la linterna con la rotación real de la malla del jugador
-                const playerForward = this.player.mesh.getDirection(BABYLON.Vector3.Forward());
+                // --- CORRECCIÓN LINTERNA OMNIDIRECCIONAL ---
+                // Usamos trigonometría pura sobre el ángulo Y del jugador para calcular hacia dónde apunta
+                const playerAngle = this.player.mesh.rotation.y;
+                const dirX = Math.sin(playerAngle);
+                const dirZ = Math.cos(playerAngle);
                 
                 if (this.config.cameraMode === "SHOOTER") {
                     const camForward = this.camera.getForwardRay().direction;
-                    flashlight.direction = new BABYLON.Vector3(playerForward.x, camForward.y, playerForward.z).normalize();
+                    // Mantenemos X y Z del jugador, pero Y de la cámara para que mire arriba/abajo
+                    flashlight.direction = new BABYLON.Vector3(dirX, camForward.y, dirZ).normalize();
                 } else {
-                    // En TopDown, la luz debe ir exactamente hacia donde apunta el pecho del personaje
-                    flashlight.direction = new BABYLON.Vector3(playerForward.x, -0.2, playerForward.z).normalize();
+                    // En TopDown, la luz debe ir plana (casi recta) en la dirección del jugador
+                    flashlight.direction = new BABYLON.Vector3(dirX, -0.2, dirZ).normalize();
                 }
 
                 for (let i = enemies.length - 1; i >= 0; i--) {
