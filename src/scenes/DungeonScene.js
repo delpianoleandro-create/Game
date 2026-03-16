@@ -71,11 +71,19 @@ export class DungeonScene {
         playerLight.parent = player.mesh; // El aura lo sigue
         flashlight.parent = player.mesh; // La linterna lo sigue y apunta hacia donde mira
 
-        // Generar algunos enemigos
+        // Generar algunos enemigos con manejo de errores
         const enemies = [];
-        enemies.push(new ShadowRat(scene, player, 0, 18));
-        enemies.push(new ShadowRat(scene, player, 8, -12));
-        enemies.push(new ShadowRat(scene, player, -12, -8));
+        try {
+            console.log("Intentando generar enemigos...");
+            enemies.push(new ShadowRat(scene, player, 0, 18));
+            enemies.push(new ShadowRat(scene, player, 8, -12));
+            enemies.push(new ShadowRat(scene, player, -12, -8));
+            console.log("Enemigos generados con éxito:", enemies.length);
+        } catch (error) {
+            console.error("Error crítico al cargar enemigos:", error);
+            // Mostrar el error en la pantalla para poder leerlo
+            document.body.innerHTML += `<div style="position:absolute; top:10%; left:10%; background:red; color:white; padding:20px; z-index:99999;"><b>Error Cargando Enemigos:</b> ${error.message}<br>${error.stack}</div>`;
+        }
 
         // Bloquear movimiento temporalmente para el inicio
         player.canMove = false; 

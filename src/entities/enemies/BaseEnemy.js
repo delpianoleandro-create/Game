@@ -1,4 +1,4 @@
-import { EnemyAI, AI_STATES } from '../ai/EnemyAI.js';
+import { EnemyAI, AI_STATES } from '../../ai/EnemyAI.js';
 
 export class BaseEnemy {
     constructor(scene, name, hp, speed, damage, target) {
