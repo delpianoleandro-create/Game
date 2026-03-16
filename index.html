@@ -39,6 +39,7 @@
     }
   </style>
   <script src="https://cdn.babylonjs.com/babylon.js"></script>
+  <script src="https://cdn.babylonjs.com/loaders/babylon.glTFFileLoader.js"></script>
 </head>
 <body>
 <canvas id="renderCanvas"></canvas>
@@ -60,18 +61,27 @@ const createScene = () => {
 
   const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0,1,0), scene);
 
+  // Cancha con textura de pasto
   const ground = BABYLON.MeshBuilder.CreateGround("ground", {width:60, height:40}, scene);
+  const grassMat = new BABYLON.StandardMaterial("grass", scene);
+  grassMat.diffuseTexture = new BABYLON.Texture("https://assets.babylonjs.com/environments/grass.jpg", scene);
+  ground.material = grassMat;
 
-  const player = BABYLON.MeshBuilder.CreateBox("player", {size:2}, scene);
-  player.position.set(0,1,10);
-  player.material = new BABYLON.StandardMaterial("pmat", scene);
-  player.material.diffuseColor = new BABYLON.Color3(0,0,1);
+  // Jugador estilo personaje (GLTF)
+  let player;
+  BABYLON.SceneLoader.ImportMesh("", "https://models.babylonjs.com/", "dummy3.babylon", scene, (meshes) => {
+    player = meshes[0];
+    player.scaling = new BABYLON.Vector3(0.5,0.5,0.5);
+    player.position.set(0,0,10);
+  });
 
+  // Pelota
   const ball = BABYLON.MeshBuilder.CreateSphere("ball", {diameter:1}, scene);
   ball.position.set(0,0.5,0);
   ball.material = new BABYLON.StandardMaterial("bmat", scene);
   ball.material.diffuseColor = new BABYLON.Color3(1,1,1);
 
+  // Arco
   const goal = BABYLON.MeshBuilder.CreateBox("goal", {width:10, height:5, depth:1}, scene);
   goal.position.set(0,2,-18);
   goal.material = new BABYLON.StandardMaterial("gmat", scene);
@@ -112,29 +122,28 @@ const createScene = () => {
   // Botón patear
   document.getElementById("kick").addEventListener("touchstart", e => {
     e.preventDefault();
-    if (BABYLON.Vector3.Distance(player.position, ball.position) < 3) {
-      ballVel.z -= 1.2; // siempre hacia el arco (Z negativo)
+    if (player && BABYLON.Vector3.Distance(player.position, ball.position) < 3) {
+      ballVel.z -= 1.2; // hacia el arco
     }
   }, { passive:false });
 
   // Loop
   scene.onBeforeRenderObservable.add(() => {
-    // Movimiento: arriba = adelante (Z negativo), abajo = atrás (Z positivo)
-    player.position.x += joyX * 0.5;
-    player.position.z += joyY * 0.5;
+    if (player) {
+      player.position.x += joyX * 0.5; // izquierda/derecha correctos
+      player.position.z += joyY * 0.5; // adelante/atrás correctos
+      player.position.y = 0; // pegado al piso
+    }
 
-    // Pegado al piso
-    player.position.y = 1;
-    ball.position.y = 0.5;
-
-    // Límites cancha
-    player.position.x = Math.max(-29, Math.min(29, player.position.x));
-    player.position.z = Math.max(-19, Math.min(19, player.position.z));
-
-    // Pelota física
     ball.position.addInPlace(ballVel);
     ballVel.scaleInPlace(0.95);
+    ball.position.y = 0.5; // pegada al piso
 
+    // Límites cancha
+    if (player) {
+      player.position.x = Math.max(-29, Math.min(29, player.position.x));
+      player.position.z = Math.max(-19, Math.min(19, player.position.z));
+    }
     ball.position.x = Math.max(-29, Math.min(29, ball.position.x));
     ball.position.z = Math.max(-19, Math.min(19, ball.position.z));
 
@@ -146,7 +155,7 @@ const createScene = () => {
       ballVel = new BABYLON.Vector3(0,0,0);
     }
 
-    camera.target = player.position;
+    if (player) camera.target = player.position;
   });
 
   return scene;
