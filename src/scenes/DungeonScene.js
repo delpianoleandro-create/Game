@@ -33,11 +33,12 @@ export class DungeonScene {
         camera.checkCollisions = true; 
         camera.collisionRadius = new BABYLON.Vector3(1, 1, 1);
         
-        // Bloqueamos la rotación de la cámara por arrastre para que el joystick mande
-        // camera.attachControl(this.canvas, true); // Comentado para que el movimiento guíe la cámara
+        // Permitimos la rotación de la cámara por arrastre en la pantalla (Touch)
+        camera.attachControl(this.canvas, true); 
         
-        camera.inertia = 0.5; 
-        camera.angularSensibilityX = 1000; 
+        camera.inertia = 0.7; 
+        camera.angularSensibilityX = 1500; 
+        camera.angularSensibilityY = 1500; 
 
         // Luz de ambiente oscura (Cueva)
         const ambientLight = new BABYLON.HemisphericLight("ambientLight", new BABYLON.Vector3(0, 1, 0), scene);
@@ -114,9 +115,7 @@ export class DungeonScene {
             if(player.canMove !== false) {
                 player.update(world.chests, enemies);
 
-                // Hacer que la cámara rote horizontalmente para estar siempre detrás del jugador
-                // Invertimos el ángulo para que coincida con el sistema de ArcRotateCamera
-                camera.alpha = -player.mesh.rotation.y - Math.PI / 2;
+                // La cámara sigue físicamente al jugador, pero rota libremente por el touch
                 camera.target = player.mesh.position;
                 
                 // Limpiar enemigos muertos del array y actualizar los vivos

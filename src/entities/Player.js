@@ -63,28 +63,43 @@ export class Player {
     update(chests, enemies) {
         if (!this.canMove) return;
 
-        // Movimiento Modo Shooter: 
-        // Joystick IZQUIERDA/DERECHA (joyX) -> Rota al jugador
-        // Joystick ARRIBA/ABAJO (joyY) -> Camina adelante/atrás según hacia donde mire
+        // 1. ROTACIÓN: El jugador siempre mira hacia donde apunta la cámara (Touch en pantalla)
+        const camera = this.scene.activeCamera;
+        if (camera) {
+            this.mesh.rotation.y = -camera.alpha - Math.PI / 2;
+        }
+
+        // 2. TRASLACIÓN: El Joystick mueve al jugador relativo a su nueva visión
         if (this.input.joyX !== 0 || this.input.joyY !== 0) {
             if (!this.isDefending) {
-                // 1. ROTACIÓN: Rota el cuerpo del jugador
-                const rotationSpeed = 0.05;
-                this.mesh.rotation.y += this.input.joyX * rotationSpeed;
-
-                // 2. TRASLACIÓN: Mueve en la dirección actual de la malla
-                if (Math.abs(this.input.joyY) > 0.1) {
-                    const forward = new BABYLON.Vector3(
-                        Math.sin(this.mesh.rotation.y),
-                        -0.2, // Gravedad
-                        Math.cos(this.mesh.rotation.y)
-                    );
-                    
-                    const moveVector = forward.scale(this.input.joyY * this.speed);
-                    this.mesh.moveWithCollisions(moveVector);
+                // Vector adelante (Hacia donde mira)
+                const forward = new BABYLON.Vector3(
+                    Math.sin(this.mesh.rotation.y),
+                    0,
+                    Math.cos(this.mesh.rotation.y)
+                );
+                
+                // Vector derecha (Para caminar de lado / Strafing)
+                const right = new BABYLON.Vector3(
+                    Math.cos(this.mesh.rotation.y),
+                    0,
+                    -Math.sin(this.mesh.rotation.y)
+                );
+                
+                // Calcular movimiento final combinando los ejes del joystick
+                const moveX = right.scale(this.input.joyX);
+                const moveZ = forward.scale(this.input.joyY);
+                
+                const moveDirection = moveX.add(moveZ);
+                
+                if (moveDirection.lengthSquared() > 0) {
+                    moveDirection.normalize().scaleInPlace(this.speed);
+                    moveDirection.y = -0.2; // Añadir gravedad
+                    this.mesh.moveWithCollisions(moveDirection);
                 }
             }
         } else {
+            // Aplicar gravedad siempre aunque no se toque el joystick
             this.mesh.moveWithCollisions(new BABYLON.Vector3(0, -0.2, 0));
         }
 
