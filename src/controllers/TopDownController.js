@@ -4,14 +4,14 @@ export class TopDownController {
         this.player = player;
         this.input = input;
         
-        // Configuración de la Cámara Estilo Brawl Stars (Cenital)
+        // Configuración de la Cámara Inclinada (Isométrica)
         this.camera.alpha = -Math.PI / 2;
-        this.camera.beta = 0.2; // Muy cerca de 0 para ver casi totalmente desde arriba
-        this.camera.radius = 28; // Más lejos para un campo de visión amplio
+        this.camera.beta = 1.0; // Inclinación de ~55 grados, no tan cenital
+        this.camera.radius = 22; // Distancia cómoda
         
-        // Bloquear límites para que el usuario no pueda rotarla accidentalmente
-        this.camera.lowerBetaLimit = 0.2;
-        this.camera.upperBetaLimit = 0.2;
+        // Bloquear límites
+        this.camera.lowerBetaLimit = 1.0;
+        this.camera.upperBetaLimit = 1.0;
         
         // IMPORTANTE: Desactivar rotación táctil de pantalla en este modo
         this.camera.detachControl(); 
@@ -28,9 +28,17 @@ export class TopDownController {
                 moveDirection.y = -0.2; // Gravedad
                 this.player.mesh.moveWithCollisions(moveDirection);
                 
-                // Rotar el jugador hacia la dirección en la que camina
+                // Rotar el jugador SUAVEMENTE hacia la dirección en la que camina
                 const targetAngle = Math.atan2(this.input.joyX, this.input.joyY);
-                this.player.mesh.rotation.y = targetAngle;
+                
+                // Interpolación lineal (Lerp) para giro suave en vez de robótico
+                let currentRotation = this.player.mesh.rotation.y;
+                // Ajustar si cruza la frontera de PI y -PI para evitar giros raros
+                const diff = targetAngle - currentRotation;
+                if (diff > Math.PI) currentRotation += Math.PI * 2;
+                if (diff < -Math.PI) currentRotation -= Math.PI * 2;
+                
+                this.player.mesh.rotation.y = BABYLON.Scalar.Lerp(currentRotation, targetAngle, 0.2);
             }
         } else {
             // Aplicar siempre gravedad aunque no camine

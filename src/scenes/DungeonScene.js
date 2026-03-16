@@ -8,6 +8,7 @@ import { ShadowRat } from '../entities/enemies/ShadowRat.js';
 import { TopDownController } from '../controllers/TopDownController.js';
 import { ShooterController } from '../controllers/ShooterController.js';
 import { AssetManager } from '../utils/AssetManager.js';
+import { SoundManager } from '../utils/SoundManager.js'; // Importar Sonidos
 
 export class DungeonScene {
     constructor(engine, canvas) {
@@ -20,6 +21,7 @@ export class DungeonScene {
         this.input = null;
         this.config = null;
         this.assetManager = null;
+        this.soundManager = null; // Gestor de Audio
     }
 
     async createScene(config) {
@@ -30,9 +32,10 @@ export class DungeonScene {
         scene.collisionsEnabled = true;
         scene.clearColor = new BABYLON.Color3(0.01, 0.01, 0.02);
 
-        // Inicializar Gestor de Assets
+        // Inicializar Gestor de Assets y Sonidos
         this.assetManager = new AssetManager(scene);
         await this.assetManager.loadDungeonAssets();
+        this.soundManager = new SoundManager();
 
         this.camera = new BABYLON.ArcRotateCamera("ArcCam", -Math.PI / 2, Math.PI / 3, 15, BABYLON.Vector3.Zero(), scene);
         this.camera.lowerRadiusLimit = 8;
@@ -68,7 +71,8 @@ export class DungeonScene {
         const world = new DungeonGenerator(scene, this.assetManager);
         world.generate();
 
-        this.player = new Player(scene, this.input, hud, dialogue);
+        // Le pasamos el SoundManager al Player para que haga ruido al atacar/abrir cofres
+        this.player = new Player(scene, this.input, hud, dialogue, this.soundManager);
         playerLight.parent = this.player.mesh;
         flashlight.parent = this.player.mesh;
 
@@ -95,6 +99,7 @@ export class DungeonScene {
             ], () => {
                 playerLight.intensity = 1.0;
                 flashlight.intensity = 3.0; 
+                this.soundManager.playChestOpen(); // Sonido mágico de encendido
                 
                 setTimeout(() => {
                     dialogue.startDialogue([
@@ -118,16 +123,22 @@ export class DungeonScene {
                         light.intensity = 1.3 + Math.random() * 0.5;
                     });
                 }
-                // También parpadea un poco la antorcha del jugador si está encendida
                 if (playerLight.intensity > 0) {
                     playerLight.intensity = 0.9 + Math.random() * 0.3;
                 }
 
+                // --- CORRECCIÓN LINTERNA ABSOLUTA ---
+                // Le pedimos a la malla del jugador su vector "Adelante" exacto en coordenadas globales
+                // Así, no importa en qué modo estés (Shooter o TopDown), la luz siempre sale de su pecho.
+                const forward = this.player.mesh.getDirection(BABYLON.Vector3.Forward());
+                
                 if (this.config.cameraMode === "SHOOTER") {
+                    // En Shooter, copiamos un poco la inclinación vertical de la cámara
                     const camForward = this.camera.getForwardRay().direction;
-                    flashlight.direction = new BABYLON.Vector3(0, camForward.y, 1).normalize();
+                    flashlight.direction = new BABYLON.Vector3(forward.x, camForward.y, forward.z).normalize();
                 } else {
-                    flashlight.direction = new BABYLON.Vector3(0, -0.1, 1).normalize();
+                    // En Top-Down, la linterna siempre apunta recta, pero sigue la rotación del cuerpo
+                    flashlight.direction = new BABYLON.Vector3(forward.x, -0.1, forward.z).normalize();
                 }
 
                 for (let i = enemies.length - 1; i >= 0; i--) {
@@ -138,7 +149,6 @@ export class DungeonScene {
                     }
                 }
 
-                // Actualizar el Minimapa Mágico
                 minimap.update(this.player, world.chests, enemies);
             }
         });

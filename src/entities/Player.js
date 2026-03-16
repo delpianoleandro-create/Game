@@ -1,12 +1,14 @@
 export class Player {
-    constructor(scene, input, hud, dialogueManager) {
+    constructor(scene, input, hud, dialogueManager, soundManager) {
         this.scene = scene;
         this.input = input;
         this.hud = hud;
         this.dialogueManager = dialogueManager;
+        this.sounds = soundManager; // Nuevo gestor de sonidos
         
         this.mesh = BABYLON.MeshBuilder.CreateCapsule("player", { radius: 0.5, height: 2 }, scene);
         this.mesh.position.y = 1;
+
         
         this.mesh.checkCollisions = true; 
         this.mesh.ellipsoid = new BABYLON.Vector3(0.5, 1, 0.5); 
@@ -111,6 +113,10 @@ export class Player {
         chest.material.emissiveColor = new BABYLON.Color3(0, 0, 0); 
         chest.scaling.y = 0.3; 
         chest.position.y = 0.15; 
+        
+        // Sonido de cofre
+        if (this.sounds) this.sounds.playChestOpen();
+
         this.inventory.push(itemName);
         if (itemName === "espada") {
             this.hasSword = true;
@@ -131,10 +137,18 @@ export class Player {
         anim.setKeys(keys);
         this.mesh.animations = [anim];
         
+        // Sonido de cortar el aire
+        if (this.sounds) this.sounds.playSwordSwing();
+
+        let hitSomething = false;
+
         if (enemies) {
             for (let enemy of enemies) {
                 const dist = BABYLON.Vector3.Distance(this.mesh.position, enemy.mesh.position);
-                if (dist < 3.0) enemy.takeDamage(10);
+                if (dist < 3.0) {
+                    enemy.takeDamage(10);
+                    hitSomething = true;
+                }
             }
         }
 
@@ -148,9 +162,15 @@ export class Player {
                         obj.dispose(); 
                         this.hud.updateGold(5); 
                         this.hud.updateDisplay();
+                        hitSomething = true;
                     }
                 }
             }
+        }
+
+        // Sonido de impacto grave si golpeó a un enemigo o rompió un cofre
+        if (hitSomething && this.sounds) {
+            this.sounds.playHit();
         }
 
         this.scene.beginAnimation(this.mesh, 0, 15, false, 1, () => {
