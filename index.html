@@ -60,7 +60,7 @@ const createScene = () => {
   // Cancha con césped
   const ground = BABYLON.MeshBuilder.CreateGround("ground", {width:60, height:40}, scene);
   const grassMat = new BABYLON.StandardMaterial("grass", scene);
-  grassMat.diffuseTexture = new BABYLON.Texture("https://playground.babylonjs.com/textures/grass.png", scene);
+  grassMat.diffuseTexture = new BABYLON.Texture("https://assets.babylonjs.com/environments/grass.jpg", scene);
   grassMat.diffuseTexture.uScale = 10;
   grassMat.diffuseTexture.vScale = 10;
   ground.material = grassMat;
@@ -73,6 +73,12 @@ const createScene = () => {
     player.position.set(0,0,-10);
     skeleton = skeletons[0];
   });
+
+  // Pelota
+  const ball = BABYLON.MeshBuilder.CreateSphere("ball", {diameter:0.6}, scene);
+  ball.position.set(0,0.3,0);
+  ball.material = new BABYLON.StandardMaterial("bmat", scene);
+  ball.material.diffuseColor = new BABYLON.Color3(1,1,1);
   // Arco
   const goal = BABYLON.MeshBuilder.CreateBox("goal", {width:10, height:5, depth:1}, scene);
   goal.position.set(0,2,18);
@@ -129,8 +135,8 @@ const createScene = () => {
   // Loop
   scene.onBeforeRenderObservable.add(() => {
     if (player) {
-      player.position.x += joyX * 0.2;
-      player.position.z += joyY * 0.2;
+      player.position.x += joyX * 0.15; // más lento
+      player.position.z += joyY * 0.15;
       player.position.y = 0;
       if (skeleton) {
         if (joyX !== 0 || joyY !== 0) scene.beginAnimation(skeleton, 0, 60, true);
@@ -176,9 +182,3 @@ window.addEventListener("resize", () => engine.resize());
 </script>
 </body>
 </html>
-
-  // Pelota
-  const ball = BABYLON.MeshBuilder.CreateSphere("ball", {diameter:0.6}, scene);
-  ball.position.set(0,0.3,0);
-  ball.material = new BABYLON.StandardMaterial("bmat", scene);
-  ball.material.diffuseColor = new BABYLON.Color3(1,1,1);
