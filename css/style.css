@@ -15,6 +15,98 @@ canvas {
   touch-action: none;
   display: block;
 }
+
+/* --- Menús RPG --- */
+#menu-layer {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.85); /* Fondo oscuro general */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+.menu-panel {
+  background: rgba(15, 15, 25, 0.95);
+  border: 4px solid #6b5c38;
+  border-radius: 12px;
+  padding: 30px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 0 20px rgba(0,0,0,1);
+  color: #eaddcf;
+  font-family: 'Courier New', Courier, monospace;
+}
+.game-title {
+  color: #ffcc00;
+  text-shadow: 2px 2px 4px #000;
+  margin-top: 0;
+  font-size: 28px;
+  text-transform: uppercase;
+}
+.menu-title {
+  color: #aaa;
+  border-bottom: 1px solid #444;
+  padding-bottom: 10px;
+  margin-top: 0;
+}
+.menu-btn {
+  display: block;
+  width: 100%;
+  margin: 15px 0;
+  padding: 15px;
+  background: linear-gradient(to bottom, #4a3f24, #2a2415);
+  border: 2px solid #8b7c58;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: transform 0.1s, filter 0.1s;
+}
+.menu-btn:active {
+  transform: scale(0.95);
+  filter: brightness(1.2);
+}
+.settings-group {
+  text-align: left;
+  margin-bottom: 20px;
+  background: rgba(0,0,0,0.3);
+  padding: 10px;
+  border-radius: 5px;
+}
+.settings-group h3 {
+  color: #ffd700;
+  font-size: 16px;
+  margin-top: 0;
+}
+.setting-item {
+  display: block;
+  margin: 10px 0;
+  font-size: 14px;
+  cursor: pointer;
+}
+.setting-item input {
+  margin-right: 10px;
+  transform: scale(1.2);
+}
+
+/* --- HUD --- */
+.pause-btn {
+  position: absolute;
+  top: 15px; right: 15px;
+  background: rgba(0,0,0,0.6);
+  border: 2px solid #6b5c38;
+  color: white;
+  font-size: 24px;
+  border-radius: 50%;
+  width: 45px; height: 45px;
+  cursor: pointer;
+  display: flex; justify-content: center; align-items: center;
+}
+
 /* Punto de Mira Shooter */
 #crosshair {
   position: absolute;

@@ -49,10 +49,50 @@
   <canvas id="renderCanvas"></canvas>
   
   <!-- Punto de Mira (Crosshair) -->
-  <div id="crosshair">+</div>
+  <div id="crosshair" style="display:none;">+</div>
   
-  <div id="ui-layer">
+  <!-- Capa Principal de Menús -->
+  <div id="menu-layer">
+    <!-- Menú Principal -->
+    <div id="mainMenu" class="menu-panel">
+      <h1 class="game-title">Las Profundidades de Elyria</h1>
+      <button id="btnNewGame" class="menu-btn">Nueva Partida</button>
+      <button id="btnSettingsMain" class="menu-btn">Configuración</button>
+      <button id="btnCredits" class="menu-btn">Aventureros</button>
+    </div>
+
+    <!-- Menú de Configuración -->
+    <div id="settingsMenu" class="menu-panel" style="display: none;">
+      <h2 class="menu-title">Configuración</h2>
+      
+      <div class="settings-group">
+        <h3>Controles y Cámara</h3>
+        <label class="setting-item">
+          <input type="radio" name="camMode" value="TOP_DOWN" checked>
+          <span>Modo Clásico (Vista desde arriba, Mando puro)</span>
+        </label>
+        <label class="setting-item">
+          <input type="radio" name="camMode" value="SHOOTER">
+          <span>Modo Acción (Rotación táctil libre, Mando relativo)</span>
+        </label>
+      </div>
+
+      <div class="settings-group">
+        <h3>Gráficos</h3>
+        <label class="setting-item">
+          <input type="checkbox" id="chkShadows" checked>
+          <span>Sombras Dinámicas (Desactivar si va lento)</span>
+        </label>
+      </div>
+
+      <button id="btnSaveSettings" class="menu-btn">Guardar y Volver</button>
+    </div>
+  </div>
+
+  <!-- Capa HUD (Oculta al inicio) -->
+  <div id="ui-layer" style="display: none;">
     <div id="scoreDisplay">Oro: 0 | Nivel: 1</div>
+    <button id="btnPause" class="pause-btn">⚙️</button>
     
     <!-- Inventario (Bolso) -->
     <div id="inventoryUI">
@@ -69,9 +109,10 @@
     <div id="joystick"><div id="stick"></div></div>
     <div id="actionA" class="action-btn">🗡️</div>
     <div id="actionB" class="action-btn">🛡️</div>
-    <button id="creditsBtn">Créditos</button>
-    <div id="creditsPanel"></div>
   </div>
+
+  <!-- Panel de Créditos (Ahora global) -->
+  <div id="creditsPanel"></div>
 
   <!-- Cargamos el juego como módulo con un ID único para evadir la caché -->
   <script type="module">
