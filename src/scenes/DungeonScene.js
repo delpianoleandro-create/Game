@@ -71,7 +71,7 @@ export class DungeonScene {
         const world = new DungeonGenerator(scene, this.assetManager);
         world.generate();
 
-        // Le pasamos el SoundManager al Player para que haga ruido al atacar/abrir cofres
+        // Le pasamos el SoundManager al Player
         const heroSelected = config.hero || "mago";
         this.player = new Player(scene, this.input, hud, dialogue, this.soundManager, heroSelected);
         playerLight.parent = this.player.mesh;
@@ -80,11 +80,25 @@ export class DungeonScene {
         // Aplicar controlador basado en config
         this.applyConfig(config);
 
+        // Generar armas iniciales cerca del jugador garantizadas (Para no estar desnudos al inicio)
+        world.createChest("chest_start_sword", "espada", -4, 0.5, 4);
+        world.createChest("chest_start_shield", "escudo", 4, 0.5, 4);
+
+        // Distribuir enemigos proceduralmente en las salas (Alejados del centro 0,0)
         const enemies = [];
         try {
-            enemies.push(new ShadowRat(scene, this.player, 0, 18));
-            enemies.push(new ShadowRat(scene, this.player, 8, -12));
-            enemies.push(new ShadowRat(scene, this.player, -12, -8));
+            for (let i = 0; i < 12; i++) {
+                // Posición aleatoria en un mapa de -45 a 45
+                let ex = (Math.random() - 0.5) * 80;
+                let ez = (Math.random() - 0.5) * 80;
+                
+                // Si caen muy cerca del jugador (sala central de 30x30), los mandamos lejos
+                if (Math.abs(ex) < 15 && Math.abs(ez) < 15) {
+                    ex += (ex > 0 ? 20 : -20);
+                    ez += (ez > 0 ? 20 : -20);
+                }
+                enemies.push(new ShadowRat(scene, this.player, ex, ez));
+            }
         } catch (error) {
             console.error("Error al cargar enemigos:", error);
         }
