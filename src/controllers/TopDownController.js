@@ -4,14 +4,14 @@ export class TopDownController {
         this.player = player;
         this.input = input;
         
-        // Configuración de la Cámara Inclinada (Isométrica)
+        // Configuración de la Cámara Inclinada (Isométrica Elevada)
         this.camera.alpha = -Math.PI / 2;
-        this.camera.beta = 1.0; // Inclinación de ~55 grados, no tan cenital
-        this.camera.radius = 22; // Distancia cómoda
+        this.camera.beta = 0.8; // Un poco más picada
+        this.camera.radius = 32; // Mucho más arriba para vista táctica
         
         // Bloquear límites
-        this.camera.lowerBetaLimit = 1.0;
-        this.camera.upperBetaLimit = 1.0;
+        this.camera.lowerBetaLimit = 0.8;
+        this.camera.upperBetaLimit = 0.8;
         
         // IMPORTANTE: Desactivar rotación táctil de pantalla en este modo
         this.camera.detachControl(); 
