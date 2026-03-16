@@ -1,24 +1,38 @@
 export class Player {
-    constructor(scene, input, hud, dialogueManager, soundManager) {
+    constructor(scene, input, hud, dialogueManager, soundManager, heroType = "mago") {
         this.scene = scene;
         this.input = input;
         this.hud = hud;
         this.dialogueManager = dialogueManager;
-        this.sounds = soundManager; // Nuevo gestor de sonidos
+        this.sounds = soundManager; 
         
+        // BUG FIX: Al crear la cápsula, el pivote está en el centro. Como mide 2, su centro debe estar en Y=1 para tocar el suelo, no hundido.
         this.mesh = BABYLON.MeshBuilder.CreateCapsule("player", { radius: 0.5, height: 2 }, scene);
-        this.mesh.position.y = 1;
-
+        this.mesh.position.y = 1.0; 
         
         this.mesh.checkCollisions = true; 
-        this.mesh.ellipsoid = new BABYLON.Vector3(0.5, 1, 0.5); 
-        this.mesh.ellipsoidOffset = new BABYLON.Vector3(0, 1, 0);
+        this.mesh.ellipsoid = new BABYLON.Vector3(0.48, 0.95, 0.48); // Ligeramente más pequeño que la malla para no atorarse
+        this.mesh.ellipsoidOffset = new BABYLON.Vector3(0, 0.95, 0);
 
         const mat = new BABYLON.StandardMaterial("playerMat", scene);
-        mat.diffuseColor = new BABYLON.Color3(0.2, 0.5, 0.8); 
+        
+        // --- PERSONALIZACIÓN DEL HÉROE ---
+        this.speed = 0.2;
+        if (heroType === "mago") {
+            mat.diffuseColor = new BABYLON.Color3(0.2, 0.2, 0.8); // Túnica Azul Oscuro
+            mat.emissiveColor = new BABYLON.Color3(0.05, 0.05, 0.2); // Brillo mágico tenue
+            this.speed = 0.18; // Mago es un poco más lento
+        } else if (heroType === "indiana") {
+            mat.diffuseColor = new BABYLON.Color3(0.6, 0.4, 0.2); // Chaqueta Marrón Cuero
+            this.mesh.scaling.y = 1.05; // Un poco más alto
+        } else if (heroType === "mujer") {
+            mat.diffuseColor = new BABYLON.Color3(0.8, 0.2, 0.3); // Ropa Roja/Vino
+            this.mesh.scaling.x = 0.8; // Más delgada
+            this.mesh.scaling.z = 0.8;
+            this.speed = 0.24; // Más ágil y rápida
+        }
         this.mesh.material = mat;
 
-        this.speed = 0.2; 
         this.isAttacking = false;
         this.isDefending = false;
         this.canMove = true;

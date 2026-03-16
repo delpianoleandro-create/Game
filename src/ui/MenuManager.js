@@ -25,7 +25,8 @@ export class MenuManager {
         // Configuración por defecto
         this.config = {
             cameraMode: "TOP_DOWN",
-            shadows: true
+            shadows: true,
+            hero: "mago"
         };
     }
 
@@ -60,6 +61,12 @@ export class MenuManager {
     }
 
     startGame() {
+        // Leer el héroe seleccionado antes de empezar
+        const heroSelect = document.getElementById("heroSelect");
+        if (heroSelect) {
+            this.config.hero = heroSelect.value;
+        }
+
         this.layerMenu.style.display = "none";
         this.uiLayer.style.display = "block";
         this.creditsPanel.style.display = "none";

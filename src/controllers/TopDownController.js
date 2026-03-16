@@ -29,16 +29,17 @@ export class TopDownController {
                 this.player.mesh.moveWithCollisions(moveDirection);
                 
                 // Rotar el jugador SUAVEMENTE hacia la dirección en la que camina
+                // En Babylon, Atan2(x, z) es la forma correcta de obtener el ángulo de Yaw (Y)
                 const targetAngle = Math.atan2(this.input.joyX, this.input.joyY);
                 
                 // Interpolación lineal (Lerp) para giro suave en vez de robótico
                 let currentRotation = this.player.mesh.rotation.y;
-                // Ajustar si cruza la frontera de PI y -PI para evitar giros raros
-                const diff = targetAngle - currentRotation;
-                if (diff > Math.PI) currentRotation += Math.PI * 2;
-                if (diff < -Math.PI) currentRotation -= Math.PI * 2;
+                // Ajustar si cruza la frontera de PI y -PI para evitar giros raros (ej. pasar de 180 a -180)
+                let diff = targetAngle - currentRotation;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+                while (diff < -Math.PI) diff += Math.PI * 2;
                 
-                this.player.mesh.rotation.y = BABYLON.Scalar.Lerp(currentRotation, targetAngle, 0.2);
+                this.player.mesh.rotation.y += diff * 0.2; // Suavidad 0.2
             }
         } else {
             // Aplicar siempre gravedad aunque no camine

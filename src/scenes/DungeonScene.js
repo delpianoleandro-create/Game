@@ -72,7 +72,8 @@ export class DungeonScene {
         world.generate();
 
         // Le pasamos el SoundManager al Player para que haga ruido al atacar/abrir cofres
-        this.player = new Player(scene, this.input, hud, dialogue, this.soundManager);
+        const heroSelected = config.hero || "mago";
+        this.player = new Player(scene, this.input, hud, dialogue, this.soundManager, heroSelected);
         playerLight.parent = this.player.mesh;
         flashlight.parent = this.player.mesh;
 
