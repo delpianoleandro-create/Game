@@ -16,12 +16,59 @@
       height: 100%;
       touch-action: none;
     }
+    #joystick {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      width: 140px;
+      height: 140px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 50%;
+    }
+    #stick {
+      position: absolute;
+      left: 60px;
+      top: 60px;
+      width: 40px;
+      height: 40px;
+      background: rgba(0,255,255,0.5);
+      border-radius: 50%;
+    }
+    #action {
+      position: absolute;
+      bottom: 40px;
+      right: 40px;
+      width: 80px;
+      height: 80px;
+      background: rgba(255,0,0,0.5);
+      border-radius: 50%;
+    }
+    #creditsBtn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      padding: 10px;
+      background: rgba(255,255,255,0.3);
+    }
+    #creditsPanel {
+      position: absolute;
+      top: 60px;
+      right: 20px;
+      width: 200px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 10px;
+      display: none;
+    }
   </style>
 </head>
 <body>
   <canvas id="renderCanvas"></canvas>
+  <div id="joystick"><div id="stick"></div></div>
+  <div id="action"></div>
+  <button id="creditsBtn">Créditos</button>
+  <div id="creditsPanel"></div>
   <script src="https://cdn.babylonjs.com/babylon.js"></script>
-  <script src="https://cdn.babylonjs.com/gui/babylon.gui.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
