@@ -3,16 +3,35 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <!-- Anti-Cache estricto -->
+  
+  <!-- Forzar limpieza de caché -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   
   <title>Aventuras y Mazmorras</title>
   <link rel="stylesheet" href="css/style.css">
+  
+  <!-- Cargar Babylon primero -->
   <script src="https://cdn.babylonjs.com/babylon.js"></script>
+  
+  <style>
+    #loading-screen {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: #000; color: #555;
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+      z-index: 10000; font-family: monospace;
+    }
+  </style>
 </head>
 <body>
+  <div id="loading-screen">
+    <h2>CARGANDO MAZMORRA...</h2>
+    <p>Por favor, espera.</p>
+  </div>
+
   <canvas id="renderCanvas"></canvas>
   
   <div id="ui-layer">
@@ -24,9 +43,17 @@
     <div id="creditsPanel"></div>
   </div>
 
+  <!-- Cargamos el juego como módulo con un ID único para evadir la caché -->
   <script type="module">
-    // Cache busting para el módulo principal
-    import(`./src/main.js?v=${Date.now()}`);
+    console.log("Iniciando cargador de juego...");
+    const timestamp = Date.now();
+    import(`./src/game.js?v=${timestamp}`).then(() => {
+        console.log("Juego cargado correctamente.");
+        document.getElementById("loading-screen").style.display = "none";
+    }).catch(err => {
+        console.error("Error al cargar el juego:", err);
+        document.getElementById("loading-screen").innerHTML = `<h2 style="color:red">ERROR AL CARGAR</h2><p>${err.message}</p>`;
+    });
   </script>
 </body>
 </html>
