@@ -3,6 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <!-- Anti-Cache estricto -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  
   <title>Aventuras y Mazmorras</title>
   <link rel="stylesheet" href="css/style.css">
   <script src="https://cdn.babylonjs.com/babylon.js"></script>
@@ -10,19 +15,18 @@
 <body>
   <canvas id="renderCanvas"></canvas>
   
-  <!-- Capa de Interfaz Gráfica (HUD) -->
   <div id="ui-layer">
     <div id="scoreDisplay">Oro: 0 | Nivel: 1</div>
-    
     <div id="joystick"><div id="stick"></div></div>
-    
     <div id="actionA" class="action-btn">🗡️</div>
     <div id="actionB" class="action-btn">🛡️</div>
-    
     <button id="creditsBtn">Créditos</button>
     <div id="creditsPanel"></div>
   </div>
 
-  <script type="module" src="src/main.js"></script>
+  <script type="module">
+    // Cache busting para el módulo principal
+    import(`./src/main.js?v=${Date.now()}`);
+  </script>
 </body>
 </html>
