@@ -2,37 +2,36 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Mundo Abierto Móvil</title>
+  <title>Mundo Abierto con Joystick</title>
   <style>
     html, body { width:100%; height:100%; margin:0; overflow:hidden; }
     #renderCanvas { width:100%; height:100%; touch-action:none; }
-    .controls {
+    .joystick {
       position: absolute;
-      bottom: 10px;
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      gap: 10px;
+      bottom: 20px;
+      left: 20px;
+      width: 120px;
+      height: 120px;
+      background: rgba(100,100,100,0.3);
+      border-radius: 50%;
+      touch-action: none;
     }
-    .btn {
-      background: #444;
-      color: white;
-      font-size: 24px;
-      padding: 15px;
-      border-radius: 8px;
-      border: none;
-      width: 60px;
+    .stick {
+      position: absolute;
+      top: 40px;
+      left: 40px;
+      width: 40px;
+      height: 40px;
+      background: rgba(200,200,200,0.8);
+      border-radius: 50%;
     }
   </style>
   <script src="https://cdn.babylonjs.com/babylon.js"></script>
 </head>
 <body>
 <canvas id="renderCanvas"></canvas>
-<div class="controls">
-  <button class="btn" id="left">⬅️</button>
-  <button class="btn" id="up">⬆️</button>
-  <button class="btn" id="right">➡️</button>
-  <button class="btn" id="jump">⤴️</button>
+<div class="joystick" id="joystick">
+  <div class="stick" id="stick"></div>
 </div>
 <script>
   const canvas = document.getElementById("renderCanvas");
@@ -58,28 +57,38 @@
     player.material = new BABYLON.StandardMaterial("pmat", scene);
     player.material.diffuseColor = new BABYLON.Color3(0,0,1);
 
-    // Movimiento
-    let dirX = 0, dirZ = 0, jumping = false;
+    // Joystick virtual
+    const joystick = document.getElementById("joystick");
+    const stick = document.getElementById("stick");
+    let centerX = joystick.offsetLeft + joystick.offsetWidth/2;
+    let centerY = joystick.offsetTop + joystick.offsetHeight/2;
+    let moveX = 0, moveZ = 0;
 
-    document.getElementById("left").addEventListener("touchstart", () => dirX = -0.2);
-    document.getElementById("right").addEventListener("touchstart", () => dirX = 0.2);
-    document.getElementById("up").addEventListener("touchstart", () => dirZ = 0.2);
-    document.getElementById("jump").addEventListener("touchstart", () => {
-      if (!jumping) {
-        jumping = true;
-        player.position.y += 2;
-        setTimeout(() => { player.position.y -= 2; jumping = false; }, 500);
+    joystick.addEventListener("touchmove", e => {
+      const touch = e.touches[0];
+      let dx = touch.clientX - centerX;
+      let dy = touch.clientY - centerY;
+      let dist = Math.sqrt(dx*dx + dy*dy);
+      let maxDist = 50;
+      if (dist > maxDist) {
+        dx *= maxDist/dist;
+        dy *= maxDist/dist;
       }
+      stick.style.left = (dx + 40) + "px";
+      stick.style.top = (dy + 40) + "px";
+      moveX = dx/50 * 0.2;
+      moveZ = dy/50 * 0.2;
     });
 
-    // Reset al soltar
-    ["left","right","up"].forEach(id => {
-      document.getElementById(id).addEventListener("touchend", () => { dirX = 0; dirZ = 0; });
+    joystick.addEventListener("touchend", () => {
+      stick.style.left = "40px";
+      stick.style.top = "40px";
+      moveX = 0; moveZ = 0;
     });
 
     scene.onBeforeRenderObservable.add(() => {
-      player.position.x += dirX;
-      player.position.z += dirZ;
+      player.position.x += moveX;
+      player.position.z += moveZ;
       camera.target = player.position;
     });
 
