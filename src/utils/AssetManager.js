@@ -24,19 +24,19 @@ export class AssetManager {
         const floorMat = new BABYLON.StandardMaterial("floorMat", this.scene);
         floorMat.diffuseColor = new BABYLON.Color3(0.15, 0.15, 0.15); 
         floorMat.specularColor = new BABYLON.Color3(0.05, 0.05, 0.05); 
-        floorMat.maxSimultaneousLights = 16;
+        floorMat.maxSimultaneousLights = 32;
         this.materials.set("floor", floorMat);
 
         const wallMat = new BABYLON.StandardMaterial("wallMat", this.scene);
         wallMat.diffuseColor = new BABYLON.Color3(0.25, 0.25, 0.28);
         wallMat.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1);
-        wallMat.maxSimultaneousLights = 16;
+        wallMat.maxSimultaneousLights = 32;
         this.materials.set("wall", wallMat);
 
         const woodMat = new BABYLON.StandardMaterial("woodMat", this.scene);
         woodMat.diffuseColor = new BABYLON.Color3(0.6, 0.4, 0.1); 
         woodMat.emissiveColor = new BABYLON.Color3(0.1, 0.05, 0); 
-        woodMat.maxSimultaneousLights = 16;
+        woodMat.maxSimultaneousLights = 32;
         this.materials.set("wood", woodMat);
 
         const fireMat = new BABYLON.StandardMaterial("fireMat", this.scene);
@@ -60,7 +60,7 @@ export class AssetManager {
         floorPBR.metallic = 0.1; // Ligeramente brillante
         floorPBR.roughness = 0.4; // Refleja la humedad
         floorPBR.bumpTexture = noiseTexture; // Da relieve a la geometría 3D sin añadir polígonos
-        floorPBR.maxSimultaneousLights = 16;
+        floorPBR.maxSimultaneousLights = 32;
         this.materials.set("floor", floorPBR);
 
         // Muros PBR (Roca áspera y seca)
@@ -69,7 +69,7 @@ export class AssetManager {
         wallPBR.metallic = 0.0;
         wallPBR.roughness = 0.9; // Piedra seca (no refleja casi nada)
         wallPBR.bumpTexture = noiseTexture; // Mismo relieve
-        wallPBR.maxSimultaneousLights = 16;
+        wallPBR.maxSimultaneousLights = 32;
         this.materials.set("wall", wallPBR);
 
         // Madera Barnizada PBR (Cofres)
@@ -77,7 +77,7 @@ export class AssetManager {
         woodPBR.albedoColor = new BABYLON.Color3(0.4, 0.2, 0.05); // Madera viva
         woodPBR.metallic = 0.05;
         woodPBR.roughness = 0.6; 
-        woodPBR.maxSimultaneousLights = 16;
+        woodPBR.maxSimultaneousLights = 32;
         this.materials.set("wood", woodPBR);
 
         // Fuego Clásico (El fuego no refleja luz, la emite)
@@ -94,7 +94,7 @@ export class AssetManager {
         floorNeon.diffuseColor = new BABYLON.Color3(0.01, 0.01, 0.02);
         floorNeon.specularColor = new BABYLON.Color3(1, 1, 1); // Reflejos puros
         floorNeon.specularPower = 64; // Brillo muy concentrado
-        floorNeon.maxSimultaneousLights = 16;
+        floorNeon.maxSimultaneousLights = 32;
         this.materials.set("floor", floorNeon);
 
         // Muros: Marcos emisivos verdes (Wireframe estilo Tron)
@@ -102,14 +102,14 @@ export class AssetManager {
         wallNeon.diffuseColor = new BABYLON.Color3(0.05, 0.05, 0.05);
         wallNeon.emissiveColor = new BABYLON.Color3(0.0, 0.2, 0.0); // Resplandor verde de fondo
         wallNeon.wireframe = true; // TRUCO DE CÓDIGO: Muestra los polígonos
-        wallNeon.maxSimultaneousLights = 16;
+        wallNeon.maxSimultaneousLights = 32;
         this.materials.set("wall", wallNeon);
 
         // Objetos: Cajas de energía azul
         const neonBox = new BABYLON.StandardMaterial("neonBox", this.scene);
         neonBox.diffuseColor = new BABYLON.Color3(0, 0.5, 1);
         neonBox.emissiveColor = new BABYLON.Color3(0, 0.2, 0.5); // Brillo azul intenso
-        neonBox.maxSimultaneousLights = 16;
+        neonBox.maxSimultaneousLights = 32;
         this.materials.set("wood", neonBox); // Reemplazamos la "madera" por cajas de energía
 
         // Fuego: Núcleos de poder rosa/magenta
