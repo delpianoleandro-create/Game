@@ -70,7 +70,7 @@ export class DungeonScene {
         const minimap = new Minimap();
         
         const world = new DungeonGenerator(scene, this.assetManager);
-        world.generate();
+        world.generate(); // Prepara el mundo infinito
 
         // Le pasamos el SoundManager al Player
         const heroSelected = config.hero || "mago";
@@ -81,45 +81,28 @@ export class DungeonScene {
         // Aplicar controlador basado en config
         this.applyConfig(config);
 
-        // Generar armas iniciales cerca del jugador garantizadas (Para no estar desnudos al inicio)
+        // Generar armas iniciales garantizadas en el punto de inicio para no estar desnudos
         world.createChest("chest_start_sword", "espada", -4, 0.5, 4);
         world.createChest("chest_start_shield", "escudo", 4, 0.5, 4);
 
-        // Distribuir enemigos proceduralmente en las salas (Alejados del centro 0,0)
         const enemies = [];
-        try {
-            for (let i = 0; i < 12; i++) {
-                // Posición aleatoria en un mapa de -45 a 45
-                let ex = (Math.random() - 0.5) * 80;
-                let ez = (Math.random() - 0.5) * 80;
-                
-                // Si caen muy cerca del jugador (sala central de 30x30), los mandamos lejos
-                if (Math.abs(ex) < 15 && Math.abs(ez) < 15) {
-                    ex += (ex > 0 ? 20 : -20);
-                    ez += (ez > 0 ? 20 : -20);
-                }
-                enemies.push(new ShadowRat(scene, this.player, ex, ez));
-            }
-        } catch (error) {
-            console.error("Error al cargar enemigos:", error);
-        }
-
+        
         this.player.canMove = false; 
 
         setTimeout(() => {
             if (scene.paused) return; 
             dialogue.startDialogue([
                 { speaker: "Voz Desconocida", text: "¿Aún respiras, Buscador?" },
-                { speaker: "Tú", text: "¿Dónde... dónde estoy? Mi cabeza da vueltas..." },
-                { speaker: "Voz Desconocida", text: "En la tumba de la avaricia del Imperio de Elyria. Enciende tu luz..." }
+                { speaker: "Tú", text: "¿Dónde... dónde estoy? Esto parece no tener fin..." },
+                { speaker: "Voz Desconocida", text: "Estás en el Laberinto Infinito de Elyria. Enciende tu luz y no mires atrás..." }
             ], () => {
                 playerLight.intensity = 1.0;
                 flashlight.intensity = 3.0; 
-                this.soundManager.playChestOpen(); // Sonido mágico de encendido
+                this.soundManager.playChestOpen(); 
                 
                 setTimeout(() => {
                     dialogue.startDialogue([
-                        { speaker: "Voz Desconocida", text: "Toma tu arma con fuerza. Ellos ya han olido tu luz. Sobrevive." }
+                        { speaker: "Voz Desconocida", text: "Toma tu arma con fuerza. Sobrevive todo lo que puedas." }
                     ], () => {
                         this.player.canMove = true;
                     });
@@ -131,6 +114,17 @@ export class DungeonScene {
         scene.onBeforeRenderObservable.add(() => {
             if(this.player.canMove !== false && !scene.paused) {
                 if (this.controller) this.controller.update();
+                
+                // 1. EL MUNDO INIFINITO REACCIONA AL JUGADOR
+                world.update(this.player.mesh.position, enemies);
+                
+                // Si el mundo generó datos de enemigos nuevos, los instanciamos aquí (para tener contexto de la escena)
+                while(world.enemiesData.length > 0) {
+                    let ed = world.enemiesData.pop();
+                    enemies.push(new ShadowRat(scene, this.player, ed.x, ed.z));
+                }
+
+                // 2. JUGADOR
                 this.player.update(world.chests, enemies);
 
                 // --- 🕯️ EFECTO DE PARPADEO (FLICKER) PARA ANTORCHAS ---
