@@ -7,7 +7,6 @@ import { Minimap } from '../ui/Minimap.js';
 import { ShadowRat } from '../entities/enemies/ShadowRat.js';
 import { TopDownController } from '../controllers/TopDownController.js';
 import { ShooterController } from '../controllers/ShooterController.js';
-
 import { AssetManager } from '../utils/AssetManager.js';
 
 export class DungeonScene {
@@ -37,32 +36,35 @@ export class DungeonScene {
 
         this.camera = new BABYLON.ArcRotateCamera("ArcCam", -Math.PI / 2, Math.PI / 3, 15, BABYLON.Vector3.Zero(), scene);
         this.camera.lowerRadiusLimit = 8;
-        this.camera.upperRadiusLimit = 25;
-        this.camera.lowerBetaLimit = 0.2; 
+        this.camera.upperRadiusLimit = 35; // Permitir zoom más alejado
+        this.camera.lowerBetaLimit = 0.1; 
         this.camera.upperBetaLimit = Math.PI / 2.1;
         this.camera.checkCollisions = true; 
         this.camera.collisionRadius = new BABYLON.Vector3(1, 1, 1);
         this.camera.inertia = 0.8; 
 
+        // 1. Luz de ambiente general reducida para resaltar antorchas
         const ambientLight = new BABYLON.HemisphericLight("ambientLight", new BABYLON.Vector3(0, 1, 0), scene);
-        ambientLight.intensity = 0.8; 
-        ambientLight.groundColor = new BABYLON.Color3(0.2, 0.2, 0.2);
+        ambientLight.intensity = 0.4; 
+        ambientLight.groundColor = new BABYLON.Color3(0.1, 0.1, 0.1);
 
+        // 2. Luz base del jugador (Antorcha de mano)
         const playerLight = new BABYLON.PointLight("playerLight", new BABYLON.Vector3(0, 3, 0), scene);
         playerLight.intensity = 0;
         playerLight.diffuse = new BABYLON.Color3(1, 0.8, 0.5);
         playerLight.range = 30;
 
+        // 3. Linterna corregida y más potente
         const flashlight = new BABYLON.SpotLight("flashlight", new BABYLON.Vector3(0, 1, 0), new BABYLON.Vector3(0, 0, 1), Math.PI / 2.5, 10, scene);
         flashlight.intensity = 0;
         flashlight.diffuse = new BABYLON.Color3(1, 1, 1);
         flashlight.range = 60;
 
-        const input = new InputController();
+        this.input = new InputController();
         const hud = new HUD();
         const dialogue = new DialogueManager();
         const minimap = new Minimap();
-
+        
         const world = new DungeonGenerator(scene, this.assetManager);
         world.generate();
 
@@ -70,6 +72,7 @@ export class DungeonScene {
         playerLight.parent = this.player.mesh;
         flashlight.parent = this.player.mesh;
 
+        // Aplicar controlador basado en config
         this.applyConfig(config);
 
         const enemies = [];
@@ -103,10 +106,22 @@ export class DungeonScene {
             });
         }, 1500);
 
+        // Bucle Principal (Tick Rate)
         scene.onBeforeRenderObservable.add(() => {
             if(this.player.canMove !== false && !scene.paused) {
                 if (this.controller) this.controller.update();
                 this.player.update(world.chests, enemies);
+
+                // --- 🕯️ EFECTO DE PARPADEO (FLICKER) PARA ANTORCHAS ---
+                if (scene.torchLights) {
+                    scene.torchLights.forEach(light => {
+                        light.intensity = 1.3 + Math.random() * 0.5;
+                    });
+                }
+                // También parpadea un poco la antorcha del jugador si está encendida
+                if (playerLight.intensity > 0) {
+                    playerLight.intensity = 0.9 + Math.random() * 0.3;
+                }
 
                 if (this.config.cameraMode === "SHOOTER") {
                     const camForward = this.camera.getForwardRay().direction;
