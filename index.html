@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <title>Fútbol 3D Móvil</title>
+  <title>Prototipo Juego 3D</title>
   <style>
     html, body { width:100%; height:100%; margin:0; overflow:hidden; touch-action:none; }
     #renderCanvas { width:100%; height:100%; touch-action:none; }
@@ -40,10 +40,9 @@
 </head>
 <body>
 <canvas id="renderCanvas"></canvas>
-<div id="hud">⚽ Goles: <span id="score">0</span></div>
+<div id="hud">⭐ Score: <span id="score">0</span></div>
 <div class="joystick" id="joystick"><div class="stick" id="stick"></div></div>
-<div class="buttons"><button class="btn" id="kick">🥅</button></div>
-
+<div class="buttons"><button class="btn" id="action">⚡</button></div>
 <script>
 const canvas = document.getElementById("renderCanvas");
 const engine = new BABYLON.Engine(canvas, true);
@@ -52,49 +51,24 @@ const createScene = () => {
   const scene = new BABYLON.Scene(engine);
   scene.clearColor = new BABYLON.Color3(0.5,0.8,1);
 
-  const camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 40, BABYLON.Vector3.Zero(), scene);
+  const camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 30, BABYLON.Vector3.Zero(), scene);
   camera.attachControl(canvas, true);
 
   const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0,1,0), scene);
 
-  // Cancha con césped
-  const ground = BABYLON.MeshBuilder.CreateGround("ground", {width:60, height:40}, scene);
-  const grassMat = new BABYLON.StandardMaterial("grass", scene);
-  grassMat.diffuseTexture = new BABYLON.Texture("https://assets.babylonjs.com/environments/grass.jpg", scene);
-  grassMat.diffuseTexture.uScale = 10;
-  grassMat.diffuseTexture.vScale = 10;
-  ground.material = grassMat;
+  // Suelo genérico
+  const ground = BABYLON.MeshBuilder.CreateGround("ground", {width:40, height:40}, scene);
 
-  // Jugador con extremidades
-  let player, skeleton;
+  // Personaje base
+  let player;
   BABYLON.SceneLoader.ImportMesh("", "https://models.babylonjs.com/", "dummy3.babylon", scene, (meshes, _, skeletons) => {
     player = meshes[0];
-    player.scaling = new BABYLON.Vector3(1.5,1.5,1.5);
-    player.position.set(0,0,-10);
-    skeleton = skeletons[0];
+    player.scaling = new BABYLON.Vector3(1.2,1.2,1.2);
+    player.position.set(0,0,0);
   });
-
-  // Pelota
-  const ball = BABYLON.MeshBuilder.CreateSphere("ball", {diameter:0.6}, scene);
-  ball.position.set(0,0.3,0);
-  ball.material = new BABYLON.StandardMaterial("bmat", scene);
-  ball.material.diffuseColor = new BABYLON.Color3(1,1,1);
-  // Arco
-  const goal = BABYLON.MeshBuilder.CreateBox("goal", {width:10, height:5, depth:1}, scene);
-  goal.position.set(0,2,18);
-  goal.material = new BABYLON.StandardMaterial("gmat", scene);
-  goal.material.diffuseColor = new BABYLON.Color3(0,1,0);
-
-  // Arquero IA
-  const goalie = BABYLON.MeshBuilder.CreateBox("goalie", {size:2}, scene);
-  goalie.position.set(0,1,17);
-  goalie.material = new BABYLON.StandardMaterial("gmat2", scene);
-  goalie.material.diffuseColor = new BABYLON.Color3(1,0,0);
-  let goalieDir = 0.05;
 
   let score = 0;
   const scoreDisplay = document.getElementById("score");
-  let ballVel = new BABYLON.Vector3(0,0,0);
 
   // Joystick
   const joystick = document.getElementById("joystick");
@@ -123,54 +97,20 @@ const createScene = () => {
     joyX = 0; joyY = 0;
   }, { passive:false });
 
-  // Botón patear
-  document.getElementById("kick").addEventListener("touchstart", e => {
+  // Botón acción genérico
+  document.getElementById("action").addEventListener("touchstart", e => {
     e.preventDefault();
-    if (player && BABYLON.Vector3.Distance(player.position, ball.position) < 3) {
-      ballVel.z += 1.2;
-      if (skeleton) scene.beginAnimation(skeleton, 61, 80, false);
-    }
+    score++;
+    scoreDisplay.textContent = score;
   }, { passive:false });
 
   // Loop
   scene.onBeforeRenderObservable.add(() => {
     if (player) {
-      player.position.x += joyX * 0.15; // más lento
+      player.position.x += joyX * 0.15; // movimiento lento
       player.position.z += joyY * 0.15;
       player.position.y = 0;
-      if (skeleton) {
-        if (joyX !== 0 || joyY !== 0) scene.beginAnimation(skeleton, 0, 60, true);
-        else scene.stopAnimation(skeleton);
-      }
     }
-
-    ball.position.addInPlace(ballVel);
-    ballVel.scaleInPlace(0.95);
-    ball.position.y = 0.3;
-
-    goalie.position.x += goalieDir;
-    if (goalie.position.x > 4 || goalie.position.x < -4) goalieDir *= -1;
-
-    if (BABYLON.Vector3.Distance(goalie.position, ball.position) < 2) {
-      ballVel = new BABYLON.Vector3(0,0,0);
-      ball.position.z = 15;
-    }
-
-    if (player) {
-      player.position.x = Math.max(-29, Math.min(29, player.position.x));
-      player.position.z = Math.max(-19, Math.min(19, player.position.z));
-    }
-    ball.position.x = Math.max(-29, Math.min(29, ball.position.x));
-    ball.position.z = Math.max(-19, Math.min(19, ball.position.z));
-
-    if (ball.position.z > 17 && Math.abs(ball.position.x) < 5) {
-      score++;
-      scoreDisplay.textContent = score;
-      ball.position.set(0,0.3,0);
-      ballVel = new BABYLON.Vector3(0,0,0);
-    }
-
-    if (player) camera.target = player.position;
   });
 
   return scene;
