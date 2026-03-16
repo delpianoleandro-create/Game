@@ -48,6 +48,12 @@ export class BaseEnemy {
         // Moverse físicamente hacia el jugador simulando gravedad
         const moveVector = new BABYLON.Vector3(direction.x * this.speed, -0.2, direction.z * this.speed);
         this.mesh.moveWithCollisions(moveVector);
+        
+        // --- 🛡️ Hard-Collision con el piso ---
+        // Evitar que el enemigo se hunda por la gravedad o atraviese el suelo
+        if (this.mesh.position.y < 0.5) {
+            this.mesh.position.y = 0.5;
+        }
 
         // Mirar hacia el jugador
         const targetAngle = Math.atan2(direction.x, direction.z);

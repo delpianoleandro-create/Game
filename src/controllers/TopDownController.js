@@ -45,6 +45,11 @@ export class TopDownController {
             // Aplicar siempre gravedad aunque no camine
             this.player.mesh.moveWithCollisions(new BABYLON.Vector3(0, -0.2, 0));
         }
+
+        // --- 🛡️ Hard-Collision con el piso ---
+        if (this.player.mesh.position.y < 1.0 && !this.player.isDefending) {
+            this.player.mesh.position.y = 1.0;
+        }
         
         // La cámara sigue al jugador de forma sólida, sin girar
         this.camera.target = this.player.mesh.position;

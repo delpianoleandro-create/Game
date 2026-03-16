@@ -73,6 +73,12 @@ export class Player {
 
         // NOTA: El movimiento físico del jugador y la cámara ahora está delegado 
         // en src/controllers/ (TopDownController.js o ShooterController.js)
+        
+        // --- 🛡️ Hard-Collision con el piso ---
+        // Evitar que el jugador se hunda por la gravedad
+        if (this.mesh.position.y < 1.0 && !this.isDefending) {
+            this.mesh.position.y = 1.0;
+        }
 
         // Acciones y Combate
         if (this.input.actionA && !this.isAttacking && !this.isDefending) {

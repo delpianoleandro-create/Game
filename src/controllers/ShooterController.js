@@ -42,6 +42,11 @@ export class ShooterController {
             this.player.mesh.moveWithCollisions(new BABYLON.Vector3(0, -0.2, 0));
         }
 
+        // --- 🛡️ Hard-Collision con el piso ---
+        if (this.player.mesh.position.y < 1.0 && !this.player.isDefending) {
+            this.player.mesh.position.y = 1.0;
+        }
+
         this.camera.target = this.player.mesh.position;
     }
 }
