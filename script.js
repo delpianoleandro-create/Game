@@ -24,15 +24,14 @@ starLight.intensity = 0.3;
 const hemiLight = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0,1,0), scene);
 hemiLight.intensity = 0.4;
 
-// Skybox con estrellas (usa una textura válida)
+// Skybox estrellado (usa 6 imágenes: px, nx, py, ny, pz, nz)
 const skybox = BABYLON.MeshBuilder.CreateBox("skyBox", {size:1000}, scene);
 const skyboxMaterial = new BABYLON.StandardMaterial("skyBox", scene);
 skyboxMaterial.backFaceCulling = false;
-skyboxMaterial.disableLighting = true;
+skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("assets/stars", scene);
+skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
 skyboxMaterial.diffuseColor = new BABYLON.Color3(0,0,0);
-
-// ⚠️ IMPORTANTE: asegurate de tener una textura en assets/stars.jpg
-skyboxMaterial.emissiveTexture = new BABYLON.Texture("assets/stars.jpg", scene);
+skyboxMaterial.specularColor = new BABYLON.Color3(0,0,0);
 skybox.material = skyboxMaterial;
 
 // Piso
@@ -44,6 +43,19 @@ ground.material = groundMaterial;
 // Cubo de prueba
 const box = BABYLON.MeshBuilder.CreateBox("box", {size:2}, scene);
 box.position.y = 1;
+
+// Joystick virtual
+const ui = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+const leftJoystick = new BABYLON.GUI.VirtualJoystick(true);
+leftJoystick.setJoystickColor("cyan");
+
+// Movimiento con joystick
+scene.onBeforeRenderObservable.add(() => {
+  if (leftJoystick.pressed) {
+    box.position.x += leftJoystick.deltaPosition.x * 0.05;
+    box.position.z += leftJoystick.deltaPosition.y * 0.05;
+  }
+});
 
 // Render loop
 engine.runRenderLoop(() => {
