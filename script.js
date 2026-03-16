@@ -14,14 +14,32 @@ try {
     camera.lowerRadiusLimit = 5;
     camera.upperRadiusLimit = 50;
 
-    // Luces
+    // Luces (aumentadas)
     const starLight = new BABYLON.PointLight("starLight", new BABYLON.Vector3(0,50,0), scene);
-    starLight.intensity = 0.3;
+    starLight.intensity = 0.6;
     const hemiLight = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0,1,0), scene);
-    hemiLight.intensity = 0.4;
+    hemiLight.intensity = 0.8;
 
-    // Skybox removido porque faltaban las texturas (esto causaba que no cargara)
-    // Se usará el scene.clearColor que ya está configurado (negro)
+    // Cielo estrellado usando textura generada por código
+    const skyTexture = new BABYLON.DynamicTexture("skyTexture", {width: 1024, height: 1024}, scene, false);
+    const skyContext = skyTexture.getContext();
+    skyContext.fillStyle = "#000010"; // Fondo azul oscuro casi negro
+    skyContext.fillRect(0, 0, 1024, 1024);
+    for (let i = 0; i < 600; i++) {
+      skyContext.fillStyle = Math.random() > 0.5 ? "#ffffff" : "#aaaaff";
+      skyContext.beginPath();
+      const r = Math.random() * 1.5;
+      skyContext.arc(Math.random() * 1024, Math.random() * 1024, r, 0, Math.PI * 2);
+      skyContext.fill();
+    }
+    skyTexture.update();
+
+    const skybox = BABYLON.MeshBuilder.CreateSphere("skyBox", {diameter: 800}, scene);
+    const skyboxMaterial = new BABYLON.StandardMaterial("skyBoxMat", scene);
+    skyboxMaterial.backFaceCulling = false;
+    skyboxMaterial.emissiveTexture = skyTexture;
+    skyboxMaterial.disableLighting = true;
+    skybox.material = skyboxMaterial;
 
     // Piso
     const ground = BABYLON.MeshBuilder.CreateGround("ground", {width:50, height:50}, scene);
