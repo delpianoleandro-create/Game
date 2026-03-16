@@ -1,23 +1,15 @@
 export class DungeonGenerator {
-    constructor(scene) {
+    constructor(scene, assetManager) {
         this.scene = scene;
-        
-        // Materiales oscuros y rocosos para la mazmorra
-        this.wallMaterial = new BABYLON.StandardMaterial("wallMat", scene);
-        this.wallMaterial.diffuseColor = new BABYLON.Color3(0.2, 0.2, 0.22);
-        this.wallMaterial.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1);
-
-        this.floorMaterial = new BABYLON.StandardMaterial("floorMat", scene);
-        this.floorMaterial.diffuseColor = new BABYLON.Color3(0.1, 0.1, 0.1); 
-        this.floorMaterial.specularColor = new BABYLON.Color3(0.05, 0.05, 0.05);
-        
+        this.assets = assetManager; // Recibe el gestor de texturas
         this.walls = [];
+        this.chests = [];
     }
 
     generate() {
         // Suelo principal (40x40 unidades)
         const ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 40, height: 40 }, this.scene);
-        ground.material = this.floorMaterial;
+        ground.material = this.assets.getMaterial("floor"); // ¡Pide la textura al Manager!
         ground.checkCollisions = true; // Suelo sólido
 
         // Muros perimetrales gigantes
@@ -40,7 +32,6 @@ export class DungeonGenerator {
             }
         }
         
-        this.chests = [];
         // Cofre con la Espada oxidada
         this.createChest("chest_sword", "espada", -10, 0.5, 12);
         // Cofre con el Escudo viejo
@@ -62,20 +53,15 @@ export class DungeonGenerator {
     }
 
     createTorch(id, x, y, z) {
-        // 1. Soporte físico de la antorcha (Un pequeño bloque de madera)
+        // 1. Soporte físico de la antorcha
         const holder = BABYLON.MeshBuilder.CreateBox(`${id}_holder`, { width: 0.2, height: 0.5, depth: 0.2 }, this.scene);
         holder.position.set(x, y, z);
+        holder.material = this.assets.getMaterial("wood"); // ¡Madera del Manager!
         
         // 2. Fuego (La punta incandescente)
         const fire = BABYLON.MeshBuilder.CreateBox(`${id}_fire`, { width: 0.3, height: 0.3, depth: 0.3 }, this.scene);
         fire.position.set(x, y + 0.3, z);
-        
-        // Material del fuego que "brilla en la oscuridad"
-        const fireMat = new BABYLON.StandardMaterial(`${id}_fireMat`, this.scene);
-        fireMat.diffuseColor = new BABYLON.Color3(1, 0.5, 0); // Naranja base
-        fireMat.emissiveColor = new BABYLON.Color3(1, 0.8, 0); // Brillo amarillo fuerte
-        fireMat.disableLighting = true; // No le afecta la sombra, él emite luz
-        fire.material = fireMat;
+        fire.material = this.assets.getMaterial("fire"); // ¡Fuego del Manager!
 
         // 3. Luz real (PointLight) que ilumina el muro cercano
         const light = new BABYLON.PointLight(`${id}_light`, new BABYLON.Vector3(x, y + 0.5, z), this.scene);
@@ -87,7 +73,7 @@ export class DungeonGenerator {
     createWall(name, w, h, d, x, y, z) {
         const wall = BABYLON.MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, this.scene);
         wall.position.set(x, y, z);
-        wall.material = this.wallMaterial;
+        wall.material = this.assets.getMaterial("wall"); // ¡Piedra del Manager!
         wall.checkCollisions = true; // Muro sólido
         this.walls.push(wall);
     }
@@ -95,10 +81,7 @@ export class DungeonGenerator {
     createChest(name, itemType, x, y, z) {
         const chest = BABYLON.MeshBuilder.CreateBox(name, { width: 1.5, height: 1, depth: 1 }, this.scene);
         chest.position.set(x, y, z);
-        const chestMat = new BABYLON.StandardMaterial("chestMat", this.scene);
-        chestMat.diffuseColor = new BABYLON.Color3(0.6, 0.4, 0.1); // Marrón madera
-        chestMat.emissiveColor = new BABYLON.Color3(0.2, 0.1, 0); // Ligero brillo
-        chest.material = chestMat;
+        chest.material = this.assets.getMaterial("wood"); // ¡Madera del Manager!
         chest.checkCollisions = true;
         
         chest.metadata = { item: itemType, opened: false };

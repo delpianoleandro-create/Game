@@ -8,6 +8,8 @@ import { ShadowRat } from '../entities/enemies/ShadowRat.js';
 import { TopDownController } from '../controllers/TopDownController.js';
 import { ShooterController } from '../controllers/ShooterController.js';
 
+import { AssetManager } from '../utils/AssetManager.js';
+
 export class DungeonScene {
     constructor(engine, canvas) {
         this.engine = engine;
@@ -18,6 +20,7 @@ export class DungeonScene {
         this.camera = null;
         this.input = null;
         this.config = null;
+        this.assetManager = null;
     }
 
     async createScene(config) {
@@ -27,6 +30,10 @@ export class DungeonScene {
         scene.paused = false;
         scene.collisionsEnabled = true;
         scene.clearColor = new BABYLON.Color3(0.01, 0.01, 0.02);
+
+        // Inicializar Gestor de Assets
+        this.assetManager = new AssetManager(scene);
+        await this.assetManager.loadDungeonAssets();
 
         this.camera = new BABYLON.ArcRotateCamera("ArcCam", -Math.PI / 2, Math.PI / 3, 15, BABYLON.Vector3.Zero(), scene);
         this.camera.lowerRadiusLimit = 8;
@@ -51,12 +58,12 @@ export class DungeonScene {
         flashlight.diffuse = new BABYLON.Color3(1, 1, 1);
         flashlight.range = 60;
 
-        this.input = new InputController();
+        const input = new InputController();
         const hud = new HUD();
         const dialogue = new DialogueManager();
         const minimap = new Minimap();
-        
-        const world = new DungeonGenerator(scene);
+
+        const world = new DungeonGenerator(scene, this.assetManager);
         world.generate();
 
         this.player = new Player(scene, this.input, hud, dialogue);
