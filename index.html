@@ -47,7 +47,6 @@
 
 <div class="joystick" id="joystick"><div class="stick" id="stick"></div></div>
 <div class="buttons"><button class="btn" id="kick">🥅</button></div>
-
 <script>
 const canvas = document.getElementById("renderCanvas");
 const engine = new BABYLON.Engine(canvas, true);
@@ -69,25 +68,35 @@ const createScene = () => {
   grassMat.diffuseTexture.vScale = 10;
   ground.material = grassMat;
 
-  // Jugador estilo personaje
+  // Jugador con extremidades
   let player;
-  BABYLON.SceneLoader.ImportMesh("", "https://models.babylonjs.com/", "dummy3.babylon", scene, (meshes) => {
+  BABYLON.SceneLoader.ImportMesh("", "https://models.babylonjs.com/", "dummy3.babylon", scene, (meshes, _, skeletons) => {
     player = meshes[0];
-    player.scaling = new BABYLON.Vector3(1.2,1.2,1.2); // más grande
+    player.scaling = new BABYLON.Vector3(1.5,1.5,1.5); // más grande
     player.position.set(0,0,-10);
+    if (skeletons.length > 0) {
+      scene.beginAnimation(skeletons[0], 0, 60, true); // animación básica
+    }
   });
 
-  // Pelota más pequeña
+  // Pelota
   const ball = BABYLON.MeshBuilder.CreateSphere("ball", {diameter:0.6}, scene);
   ball.position.set(0,0.3,0);
   ball.material = new BABYLON.StandardMaterial("bmat", scene);
   ball.material.diffuseColor = new BABYLON.Color3(1,1,1);
 
-  // Arco al frente (Z positivo)
+  // Arco
   const goal = BABYLON.MeshBuilder.CreateBox("goal", {width:10, height:5, depth:1}, scene);
   goal.position.set(0,2,18);
   goal.material = new BABYLON.StandardMaterial("gmat", scene);
   goal.material.diffuseColor = new BABYLON.Color3(0,1,0);
+
+  // Arquero IA
+  const goalie = BABYLON.MeshBuilder.CreateBox("goalie", {size:2}, scene);
+  goalie.position.set(0,1,17);
+  goalie.material = new BABYLON.StandardMaterial("gmat2", scene);
+  goalie.material.diffuseColor = new BABYLON.Color3(1,0,0);
+  let goalieDir = 0.1;
 
   let score = 0;
   const scoreDisplay = document.getElementById("score");
@@ -112,7 +121,7 @@ const createScene = () => {
     stick.style.left = (dx + 70) + "px";
     stick.style.top = (dy + 70) + "px";
     joyX = dx/80;   // izquierda/derecha
-    joyY = -dy/80;  // invertimos: arriba = adelante (Z+)
+    joyY = -dy/80;  // arriba = adelante (Z+)
   }, { passive:false });
 
   joystick.addEventListener("touchend", e => {
@@ -125,21 +134,31 @@ const createScene = () => {
   document.getElementById("kick").addEventListener("touchstart", e => {
     e.preventDefault();
     if (player && BABYLON.Vector3.Distance(player.position, ball.position) < 3) {
-      ballVel.z += 1.2; // hacia el arco (Z positivo)
+      ballVel.z += 1.5; // hacia el arco
     }
   }, { passive:false });
 
   // Loop
   scene.onBeforeRenderObservable.add(() => {
     if (player) {
-      player.position.x += joyX * 0.5; // izquierda/derecha correctos
-      player.position.z += joyY * 0.5; // adelante/atrás correctos
-      player.position.y = 0; // pegado al piso
+      player.position.x += joyX * 0.5;
+      player.position.z += joyY * 0.5;
+      player.position.y = 0;
     }
 
     ball.position.addInPlace(ballVel);
     ballVel.scaleInPlace(0.95);
     ball.position.y = 0.3;
+
+    // IA arquero
+    goalie.position.x += goalieDir;
+    if (goalie.position.x > 4 || goalie.position.x < -4) goalieDir *= -1;
+
+    // Colisión arquero-pelota
+    if (BABYLON.Vector3.Distance(goalie.position, ball.position) < 2) {
+      ballVel = new BABYLON.Vector3(0,0,0);
+      ball.position.z = 15; // rebote
+    }
 
     // Límites cancha
     if (player) {
