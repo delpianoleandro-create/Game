@@ -18,6 +18,7 @@ export class DungeonGenerator {
         // Suelo principal (40x40 unidades)
         const ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 40, height: 40 }, this.scene);
         ground.material = this.floorMaterial;
+        ground.checkCollisions = true; // Suelo sólido
 
         // Muros perimetrales gigantes
         this.createWall("wallN", 40, 6, 1, 0, 3, 20);
@@ -39,19 +40,31 @@ export class DungeonGenerator {
             }
         }
         
-        // Un objeto llamativo: Un cofre al final (Placeholder)
-        const chest = BABYLON.MeshBuilder.CreateBox("chest", { width: 1.5, height: 1, depth: 1 }, this.scene);
-        chest.position.set(0, 0.5, 15);
-        const chestMat = new BABYLON.StandardMaterial("chestMat", this.scene);
-        chestMat.diffuseColor = new BABYLON.Color3(0.6, 0.4, 0.1); // Marrón madera
-        chestMat.emissiveColor = new BABYLON.Color3(0.2, 0.1, 0); // Ligero brillo
-        chest.material = chestMat;
+        this.chests = [];
+        // Cofre con la Espada oxidada
+        this.createChest("chest_sword", "espada", -10, 0.5, 12);
+        // Cofre con el Escudo viejo
+        this.createChest("chest_shield", "escudo", 10, 0.5, 12);
     }
 
     createWall(name, w, h, d, x, y, z) {
         const wall = BABYLON.MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, this.scene);
         wall.position.set(x, y, z);
         wall.material = this.wallMaterial;
+        wall.checkCollisions = true; // Muro sólido
         this.walls.push(wall);
+    }
+
+    createChest(name, itemType, x, y, z) {
+        const chest = BABYLON.MeshBuilder.CreateBox(name, { width: 1.5, height: 1, depth: 1 }, this.scene);
+        chest.position.set(x, y, z);
+        const chestMat = new BABYLON.StandardMaterial("chestMat", this.scene);
+        chestMat.diffuseColor = new BABYLON.Color3(0.6, 0.4, 0.1); // Marrón madera
+        chestMat.emissiveColor = new BABYLON.Color3(0.2, 0.1, 0); // Ligero brillo
+        chest.material = chestMat;
+        chest.checkCollisions = true;
+        
+        chest.metadata = { item: itemType, opened: false };
+        this.chests.push(chest);
     }
 }

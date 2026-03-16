@@ -32,6 +32,17 @@ canvas {
   font-weight: bold;
   text-shadow: 2px 2px 0 #000;
 }
+#inventoryUI {
+  position: absolute;
+  top: 45px; left: 15px;
+  color: #aaa;
+  font-family: monospace;
+  font-size: 18px;
+  background: rgba(0,0,0,0.5);
+  padding: 5px 10px;
+  border-radius: 5px;
+  text-shadow: 1px 1px 0 #000;
+}
 #joystick {
   position: absolute;
   bottom: 40px; left: 40px;

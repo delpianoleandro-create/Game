@@ -13,6 +13,9 @@ export class DungeonScene {
     async createScene() {
         const scene = new BABYLON.Scene(this.engine);
         
+        // Habilitar motor de colisiones
+        scene.collisionsEnabled = true;
+        
         // Color base de la cueva profunda
         scene.clearColor = new BABYLON.Color3(0.01, 0.01, 0.02);
 
@@ -23,6 +26,7 @@ export class DungeonScene {
         camera.rotationOffset = 180;
         camera.cameraAcceleration = 0.05;
         camera.maxCameraSpeed = 10;
+        camera.checkCollisions = true; // La cámara choca con el suelo/paredes
         
         // Bloquear control del usuario sobre la cámara para enfocar en aventura
         camera.attachControl(this.canvas, false);
@@ -54,7 +58,7 @@ export class DungeonScene {
         world.generate();
 
         // Entidades
-        const player = new Player(scene, input);
+        const player = new Player(scene, input, hud, dialogue);
         camera.lockedTarget = player.mesh; // Seguir al héroe
         playerLight.parent = player.mesh; // El aura lo sigue
         flashlight.parent = player.mesh; // La linterna lo sigue y apunta hacia donde mira
@@ -86,7 +90,7 @@ export class DungeonScene {
         // Bucle Principal
         scene.onBeforeRenderObservable.add(() => {
             if(player.canMove !== false) {
-                player.update();
+                player.update(world.chests);
             }
         });
 

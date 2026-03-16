@@ -1,6 +1,7 @@
 export class HUD {
     constructor() {
         this.scoreDisplay = document.getElementById("scoreDisplay");
+        this.inventoryItems = document.getElementById("inventoryItems");
         this.creditsBtn = document.getElementById("creditsBtn");
         this.creditsPanel = document.getElementById("creditsPanel");
         this.gold = 0;
@@ -21,6 +22,16 @@ export class HUD {
 
     updateDisplay() {
         this.scoreDisplay.textContent = `Oro: ${this.gold} | Nivel: ${this.level}`;
+    }
+
+    updateInventory(items) {
+        if (items.length === 0) {
+            this.inventoryItems.textContent = "Vacío";
+        } else {
+            // Pone la primera letra en mayúscula
+            const displayItems = items.map(item => item.charAt(0).toUpperCase() + item.slice(1));
+            this.inventoryItems.textContent = displayItems.join(", ");
+        }
     }
 
     initCredits() {
