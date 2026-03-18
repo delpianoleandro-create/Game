@@ -24,9 +24,10 @@ export class MenuManager {
 
         // Configuración por defecto
         this.config = {
-            cameraMode: "TOP_DOWN",
+            cameraMode: "SHOOTER",
             shadows: true,
             hero: "mago",
+            companion: "ninguno",
             texturePack: "classic" // Nuevo parámetro
         };
     }
@@ -70,6 +71,11 @@ export class MenuManager {
         const heroSelect = document.getElementById("heroSelect");
         if (heroSelect) {
             this.config.hero = heroSelect.value;
+        }
+
+        const companionSelect = document.getElementById("companionSelect");
+        if (companionSelect) {
+            this.config.companion = companionSelect.value;
         }
 
         this.layerMenu.style.display = "none";

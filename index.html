@@ -59,10 +59,17 @@
       
       <div class="settings-group" style="text-align: center;">
         <h3 style="margin-bottom: 10px;">Selecciona tu Héroe:</h3>
-        <select id="heroSelect" style="width: 100%; padding: 10px; font-size: 16px; background: #2a2415; color: #ffd700; border: 2px solid #8b7c58; border-radius: 5px;">
+        <select id="heroSelect" style="width: 100%; padding: 10px; font-size: 16px; background: #2a2415; color: #ffd700; border: 2px solid #8b7c58; border-radius: 5px; margin-bottom: 15px;">
           <option value="mago">🧙‍♂️ Mago de las Sombras</option>
           <option value="indiana">🤠 Aventurero (Indiana)</option>
           <option value="mujer">👩‍🦰 Exploradora Ágil</option>
+        </select>
+
+        <h3 style="margin-bottom: 10px;">Compañero:</h3>
+        <select id="companionSelect" style="width: 100%; padding: 10px; font-size: 16px; background: #2a2415; color: #ffd700; border: 2px solid #8b7c58; border-radius: 5px;">
+          <option value="ninguno">Ninguno</option>
+          <option value="duende">🧝 Duende</option>
+          <option value="animal">🐕 Mascota (Perro)</option>
         </select>
       </div>
 
@@ -78,11 +85,11 @@
       <div class="settings-group">
         <h3>Controles y Cámara</h3>
         <label class="setting-item">
-          <input type="radio" name="camMode" value="TOP_DOWN" checked>
+          <input type="radio" name="camMode" value="TOP_DOWN">
           <span>Modo Clásico (Vista desde arriba, Mando puro)</span>
         </label>
         <label class="setting-item">
-          <input type="radio" name="camMode" value="SHOOTER">
+          <input type="radio" name="camMode" value="SHOOTER" checked>
           <span>Modo Acción (Rotación táctil libre, Mando relativo)</span>
         </label>
       </div>

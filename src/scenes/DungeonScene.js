@@ -1,6 +1,7 @@
 import { InputController } from '../utils/InputController.js';
 import { HUD } from '../ui/HUD.js';
 import { Player } from '../entities/Player.js';
+import { Companion } from '../entities/Companion.js';
 import { DungeonGenerator } from '../world/DungeonGenerator.js';
 import { DialogueManager } from '../ui/DialogueManager.js';
 import { Minimap } from '../ui/Minimap.js';
@@ -78,6 +79,10 @@ export class DungeonScene {
         playerLight.parent = this.player.mesh;
         flashlight.parent = this.player.mesh;
 
+        if (config.companion && config.companion !== "ninguno") {
+            this.companion = new Companion(scene, this.player, config.companion);
+        }
+
         // Aplicar controlador basado en config
         this.applyConfig(config);
 
@@ -132,6 +137,10 @@ export class DungeonScene {
 
                 // 2. JUGADOR
                 this.player.update(world.chests, enemies);
+
+                if (this.companion) {
+                    this.companion.update();
+                }
 
                 // --- 🕯️ EFECTO DE PARPADEO (FLICKER) PARA ANTORCHAS ---
                 if (scene.torchLights) {
