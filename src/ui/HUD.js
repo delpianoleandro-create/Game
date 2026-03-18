@@ -1,4 +1,4 @@
-import { logger } from '../game.js?v=6';
+import { logger } from '../game.js?v=8';
 
 export class HUD {
     constructor() {
@@ -24,53 +24,45 @@ export class HUD {
         this.initEvents();
     }
 
+    bindTap(el, action) {
+        if (!el) return;
+        let lastTrigger = 0;
+        const handler = (e) => {
+            const now = Date.now();
+            if (now - lastTrigger < 300) return; 
+            lastTrigger = now;
+            if (e.cancelable) e.preventDefault();
+            e.stopPropagation();
+            action(e);
+        };
+        el.addEventListener("touchstart", handler, { passive: false });
+        el.addEventListener("mousedown", handler);
+    }
+
     initEvents() {
-        if (this.btnBackpack) {
-            this.btnBackpack.addEventListener("click", () => this.toggleBackpack());
-            this.btnBackpack.addEventListener("touchstart", (e) => { e.preventDefault(); this.toggleBackpack(); }, { passive: false });
-        }
+        this.bindTap(this.btnBackpack, () => this.toggleBackpack());
+        this.bindTap(document.getElementById("btnCloseBackpack"), () => this.toggleBackpack(false));
+        this.bindTap(document.getElementById("btnCloseBackpackTop"), () => this.toggleBackpack(false));
 
-        const btnCloseBackpack = document.getElementById("btnCloseBackpack");
-        if (btnCloseBackpack) {
-            btnCloseBackpack.addEventListener("click", () => this.toggleBackpack(false));
-            btnCloseBackpack.addEventListener("touchstart", (e) => { e.preventDefault(); this.toggleBackpack(false); }, { passive: false });
-        }
+        this.bindTap(document.getElementById("btnSortBackpack"), () => {
+            if (this.player) {
+                this.player.sortInventory();
+                this.updateInventory(this.player.inventory);
+            }
+        });
 
-        const btnCloseBackpackTop = document.getElementById("btnCloseBackpackTop");
-        if (btnCloseBackpackTop) {
-            btnCloseBackpackTop.addEventListener("click", () => this.toggleBackpack(false));
-            btnCloseBackpackTop.addEventListener("touchstart", (e) => { e.preventDefault(); this.toggleBackpack(false); }, { passive: false });
-        }
-
-        const btnSortBackpack = document.getElementById("btnSortBackpack");
-        if (btnSortBackpack) {
-            btnSortBackpack.addEventListener("click", () => {
-                if (this.player) {
-                    this.player.sortInventory();
-                    this.updateInventory(this.player.inventory);
-                }
-            });
-            btnSortBackpack.addEventListener("touchstart", (e) => {
-                e.preventDefault();
-                if (this.player) {
-                    this.player.sortInventory();
-                    this.updateInventory(this.player.inventory);
-                }
-            }, { passive: false });
-        }        
-        document.getElementById("btnCloseChest").addEventListener("click", () => {
+        this.bindTap(document.getElementById("btnCloseChest"), () => {
             this.chestModal.style.display = "none";
             if (this.player) {
                 this.player.canMove = true;
             }
         });
-        
-        document.getElementById("btnLootAll").addEventListener("click", () => {
+
+        this.bindTap(document.getElementById("btnLootAll"), () => {
             if (this.player && this.currentChest) {
                 this.player.lootAll(this.currentChest);
             }
         });
-
         // Logs events
         window.addEventListener("exitGame", () => {
             this.showLogs();
@@ -102,11 +94,15 @@ export class HUD {
         if (forceShow === true || this.backpackModal.style.display !== "flex") {
             this.backpackModal.style.display = "flex";
             if (this.player) {
+                this.player.canMove = false; // Pausar movimiento
                 this.updateInventory(this.player.inventory);
                 this.updateEquipment(this.player.equipment);
             }
         } else {
             this.backpackModal.style.display = "none";
+            if (this.player) {
+                this.player.canMove = true; // Reanudar movimiento
+            }
         }
     }
 
@@ -128,12 +124,12 @@ export class HUD {
                 <span class="item-icon">${item.icon}</span>
                 <span class="item-name">${item.name}</span>
             `;
-            slot.onclick = () => {
+            this.bindTap(slot, () => {
                 if (this.player) {
                     this.player.lootItem(index, this.currentChest);
                     this.renderChestItems(); // re-render
                 }
-            };
+            });
             this.chestItems.appendChild(slot);
         });
         
@@ -171,19 +167,21 @@ export class HUD {
                     <span class="item-icon">${item.icon}</span>
                     <span class="item-name">${item.name}</span>
                 `;
-                el.onclick = () => {
+                this.bindTap(el, () => {
                     if(this.player) {
                         this.player.unequipItem(slotId);
                         this.updateEquipment(this.player.equipment);
                         this.updateInventory(this.player.inventory);
                     }
-                };
+                });
             } else {
                 el.innerHTML = `
                     <span class="item-icon" style="opacity: 0.3;">${defaultIcon}</span>
                     <span class="item-name">${defaultName}</span>
                 `;
-                el.onclick = null;
+                // Remove previous event listeners by cloning
+                const clone = el.cloneNode(true);
+                el.parentNode.replaceChild(clone, el);
             }
         };
 
@@ -212,9 +210,9 @@ export class HUD {
                 <span class="item-name">${item.name}</span>
             `;
             
-            slot.onclick = (e) => {
+            this.bindTap(slot, (e) => {
                 // Si hizo clic en el botón de vender, no hacemos el "equip"
-                if (e.target.classList.contains("sell-btn")) {
+                if (e.target && e.target.classList && e.target.classList.contains("sell-btn")) {
                     if (this.player) {
                         this.player.sellItem(index);
                         this.updateInventory(this.player.inventory);
@@ -234,7 +232,7 @@ export class HUD {
                     this.updateInventory(this.player.inventory);
                     this.updateEquipment(this.player.equipment);
                 }
-            };
+            });
 
             this.backpackItems.appendChild(slot);
         });
