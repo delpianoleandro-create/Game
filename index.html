@@ -129,8 +129,26 @@
     </div>
 
     <!-- Inventario (Bolso) -->
-    <div id="inventoryUI">
-      <strong>🎒 Bolso:</strong> <span id="inventoryItems">Vacío</span>
+    <button id="btnBackpack" class="inventory-btn">🎒 Mochila: <span id="backpackFill">0%</span></button>
+
+    <!-- Modal Mochila -->
+    <div id="backpackModal" class="game-modal" style="display: none; pointer-events: auto;">
+      <div class="modal-header">🎒 Tu Mochila (<span id="backpackCount">0</span>/30)</div>
+      <div id="backpackItems" class="items-grid"></div>
+      <div class="modal-footer">
+        <button id="btnSortBackpack" class="modal-btn">Ordenar</button>
+        <button id="btnCloseBackpack" class="modal-btn">Cerrar</button>
+      </div>
+    </div>
+
+    <!-- Modal Cofre -->
+    <div id="chestModal" class="game-modal" style="display: none; pointer-events: auto;">
+      <div class="modal-header">📦 Cofre Encontrado</div>
+      <div id="chestItems" class="items-grid"></div>
+      <div class="modal-footer">
+        <button id="btnLootAll" class="modal-btn">Recoger Todo</button>
+        <button id="btnCloseChest" class="modal-btn">Cerrar</button>
+      </div>
     </div>
     
     <!-- Caja de Diálogos RPG -->

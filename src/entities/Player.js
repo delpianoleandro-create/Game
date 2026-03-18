@@ -72,8 +72,15 @@ export class Player {
         this.canMove = true;
         
         this.inventory = [];
+        this.maxInventory = 30;
         this.hasSword = false;
         this.hasShield = false;
+
+        // Conectar Player al HUD
+        if (this.hud) {
+            this.hud.player = this;
+            this.hud.updateInventory(this.inventory);
+        }
         
         this.createVisualWeapons();
         this.mesh.rotationQuaternion = BABYLON.Quaternion.Identity();
@@ -170,39 +177,95 @@ export class Player {
     checkInteractables(chests) {
         if (!chests) return;
         for (let chest of chests) {
-            if (!chest.metadata.opened) {
+            if (!chest.metadata.broken) {
                 const distance = BABYLON.Vector3.Distance(this.mesh.position, chest.position);
                 if (distance < 2.5) {
-                    this.openChest(chest);
+                    // Abrir automático la primera vez, o manual después
+                    if (!chest.metadata.opened) {
+                        this.openChest(chest);
+                    } else if (this.input.actionA && this.canMove && chest.metadata.items.length > 0) {
+                        this.input.actionA = false;
+                        this.openChest(chest);
+                    }
                 }
             }
         }
     }
 
     openChest(chest) {
-        chest.metadata.opened = true;
-        const itemName = chest.metadata.item;
-        chest.material.emissiveColor = new BABYLON.Color3(0, 0, 0); 
-        chest.scaling.y = 0.3; 
-        chest.position.y = 0.15; 
-        
-        // Sonido de cofre
-        if (this.sounds) this.sounds.playChestOpen();
+        if (!chest.metadata.opened) {
+            chest.metadata.opened = true;
+            
+            // Animación de abrir cofre
+            if (chest.lidMesh) {
+                const anim = new BABYLON.Animation("openLid", "rotation.x", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+                const keys = [{ frame: 0, value: 0 }, { frame: 15, value: -Math.PI / 2 }];
+                anim.setKeys(keys);
+                chest.lidMesh.animations = [anim];
+                this.scene.beginAnimation(chest.lidMesh, 0, 15, false);
+            } else {
+                chest.material.emissiveColor = new BABYLON.Color3(0, 0, 0); 
+                chest.scaling.y = 0.3; 
+                chest.position.y = 0.15; 
+            }
+            
+            if (this.sounds) this.sounds.playChestOpen();
+        }
 
-        this.inventory.push(itemName);
-        let displayName = itemName;
+        this.canMove = false; // Pausar movimiento mientras el UI de Loot esté abierto
+        this.hud.showChestLoot(chest);
+    }
+
+    lootItem(index, chest) {
+        if (this.inventory.length >= this.maxInventory) {
+            this.hud.toggleBackpack(false); 
+            this.showMessage("¡Tu mochila está llena! (30/30). Vende u ordena objetos.");
+            return;
+        }
+
+        const item = chest.metadata.items[index];
+        chest.metadata.items.splice(index, 1); 
         
-        if (itemName === "espada") {
+        this.inventory.push(item);
+        
+        if (item.id === "espada") {
             this.hasSword = true;
             this.swordMesh.isVisible = true; 
-            if (this.heroType === "mago") displayName = "vara mágica";
-        }
-        if (itemName === "escudo") {
+        } else if (item.id === "escudo") {
             this.hasShield = true;
             this.shieldMesh.isVisible = true; 
         }
+        
         this.hud.updateInventory(this.inventory);
-        this.showMessage(`¡Has encontrado: ${displayName.toUpperCase()}!`);
+        if (this.sounds) this.sounds.playHit(); 
+    }
+
+    lootAll(chest) {
+        while (chest.metadata.items.length > 0 && this.inventory.length < this.maxInventory) {
+            this.lootItem(0, chest);
+        }
+        this.hud.renderChestItems(); 
+        if (this.inventory.length >= this.maxInventory && chest.metadata.items.length > 0) {
+            this.showMessage("No pudiste recoger todo. Tu mochila está llena.");
+        }
+    }
+
+    sellItem(index) {
+        const item = this.inventory[index];
+        this.inventory.splice(index, 1);
+        this.hud.updateGold(item.value);
+        if (this.sounds) this.sounds.playHit(); 
+        
+        // Verificar si nos quedamos sin espada o escudo
+        this.hasSword = this.inventory.some(i => i.id === "espada");
+        this.swordMesh.isVisible = this.hasSword;
+        
+        this.hasShield = this.inventory.some(i => i.id === "escudo");
+        this.shieldMesh.isVisible = this.hasShield;
+    }
+
+    sortInventory() {
+        this.inventory.sort((a, b) => b.value - a.value); 
     }
 
     attack(destructibles, enemies) {

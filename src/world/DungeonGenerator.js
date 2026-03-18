@@ -139,11 +139,43 @@ export class DungeonGenerator {
     }
 
     createChest(name, itemType, x, y, z) {
-        const chest = BABYLON.MeshBuilder.CreateBox(name, { width: 1.5, height: 1, depth: 1 }, this.scene);
-        chest.position.set(x, y, z);
+        // Base del cofre
+        const chest = BABYLON.MeshBuilder.CreateBox(name + "_base", { width: 1.5, height: 0.8, depth: 1 }, this.scene);
+        chest.position.set(x, y - 0.1, z);
         chest.material = this.assets.getMaterial("wood");
         chest.checkCollisions = true;
-        chest.metadata = { item: itemType, opened: false };
+
+        // Tapa del cofre
+        const lid = BABYLON.MeshBuilder.CreateBox(name + "_lid", { width: 1.5, height: 0.2, depth: 1 }, this.scene);
+        lid.parent = chest;
+        lid.position.set(0, 0.5, 0); // Relativo a la base
+        lid.setPivotPoint(new BABYLON.Vector3(0, -0.1, 0.5)); // Pivote en la bisagra trasera
+        lid.material = this.assets.getMaterial("wood");
+        
+        chest.lidMesh = lid;
+
+        const allItems = [
+            { id: "espada", name: "Espada Larga", value: 50, icon: "⚔️" },
+            { id: "escudo", name: "Escudo Fuerte", value: 40, icon: "🛡️" },
+            { id: "pocion", name: "Poción Vida", value: 15, icon: "🧪" },
+            { id: "gema", name: "Gema Preciosa", value: 100, icon: "💎" },
+            { id: "oro", name: "Bolsa de Oro", value: 25, icon: "💰" }
+        ];
+
+        let generatedItems = [];
+        if (itemType === "espada") {
+            generatedItems.push({...allItems[0]}); 
+        } else if (itemType === "escudo") {
+            generatedItems.push({...allItems[1]}); 
+        } else {
+            const numItems = Math.floor(Math.random() * 3) + 1; // 1 a 3 objetos
+            for (let i = 0; i < numItems; i++) {
+                const rndItem = allItems[Math.floor(Math.random() * allItems.length)];
+                generatedItems.push({...rndItem}); 
+            }
+        }
+
+        chest.metadata = { items: generatedItems, opened: false, broken: false };
         this.chests.push(chest);
     }
 }

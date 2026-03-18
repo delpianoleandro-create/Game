@@ -300,3 +300,107 @@ canvas {
   50% { opacity: 0; }
   100% { opacity: 1; }
 }
+
+/* Modals y Botones de Inventario */
+.inventory-btn {
+  position: absolute;
+  top: 45px; left: 15px;
+  background: rgba(20, 20, 30, 0.8);
+  border: 2px solid #6b5c38;
+  color: #ffd700;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 16px;
+  cursor: pointer;
+  z-index: 100;
+}
+.game-modal {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(15, 15, 25, 0.95);
+  border: 4px solid #6b5c38;
+  border-radius: 12px;
+  padding: 20px;
+  width: 90%;
+  max-width: 500px;
+  color: #eaddcf;
+  font-family: 'Courier New', Courier, monospace;
+  z-index: 2000;
+  box-shadow: 0 0 20px #000;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+.modal-header {
+  font-size: 20px;
+  font-weight: bold;
+  color: #ffd700;
+  text-align: center;
+  border-bottom: 2px solid #444;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+.items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  gap: 10px;
+  overflow-y: auto;
+  padding: 5px;
+  min-height: 150px;
+  max-height: 300px;
+}
+.item-slot {
+  width: 60px; height: 60px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px solid #444;
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+}
+.item-slot:hover {
+  border-color: #ffd700;
+}
+.item-icon {
+  font-size: 24px;
+}
+.item-name {
+  font-size: 10px;
+  color: #aaa;
+  text-align: center;
+  margin-top: 2px;
+  word-break: break-all;
+}
+.item-price {
+  position: absolute;
+  top: -5px; right: -5px;
+  background: #aa0000;
+  color: white;
+  font-size: 10px;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+.modal-footer {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 15px;
+  border-top: 2px solid #444;
+  padding-top: 15px;
+}
+.modal-btn {
+  background: linear-gradient(to bottom, #4a3f24, #2a2415);
+  border: 2px solid #8b7c58;
+  color: white;
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.modal-btn:active {
+  transform: scale(0.95);
+}
