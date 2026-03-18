@@ -1,4 +1,4 @@
-import { ItemDatabase } from '../data/ItemDatabase.js?v=11';
+import { ItemDatabase } from '../data/ItemDatabase.js?v=12';
 
 export class DungeonGenerator {
     constructor(scene, assetManager) {

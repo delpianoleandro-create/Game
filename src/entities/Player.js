@@ -70,11 +70,21 @@ export class Player {
         this.isAttacking = false;
         this.isDefending = false;
         this.canMove = true;
+        this.isDead = false;
+
+        this.hp = 100;
+        this.maxHp = 100;
+        this.energy = 100;
+        this.maxEnergy = 100;
         
         this.inventory = [];
         this.equipment = {
             weapon: null,
             shield: null,
+            helmet: null,
+            armor: null,
+            boots: null,
+            accessory: null,
             companion: null
         };
         this.maxInventory = 30;
@@ -86,6 +96,8 @@ export class Player {
             this.hud.player = this;
             this.hud.updateInventory(this.inventory);
             this.hud.updateEquipment(this.equipment);
+            this.hud.updateHealth(this.hp, this.maxHp);
+            this.hud.updateEnergy(this.energy, this.maxEnergy);
         }
         
         this.createVisualWeapons();
@@ -132,7 +144,14 @@ export class Player {
     }
 
     update(chests, enemies) {
-        if (!this.canMove) return;
+        if (!this.canMove || this.isDead) return;
+
+        // Regeneración de energía
+        if (this.energy < this.maxEnergy) {
+            this.energy += 0.2; // Regen base
+            if (this.energy > this.maxEnergy) this.energy = this.maxEnergy;
+            if (this.hud) this.hud.updateEnergy(this.energy, this.maxEnergy);
+        }
 
         // NOTA: El movimiento físico del jugador y la cámara ahora está delegado 
         // en src/controllers/ (TopDownController.js o ShooterController.js)
@@ -286,6 +305,18 @@ export class Player {
         } else if (item.type === "companion_power") {
             prevItem = this.equipment.companion;
             this.equipment.companion = item;
+        } else if (item.type === "helmet") {
+            prevItem = this.equipment.helmet;
+            this.equipment.helmet = item;
+        } else if (item.type === "armor") {
+            prevItem = this.equipment.armor;
+            this.equipment.armor = item;
+        } else if (item.type === "boots") {
+            prevItem = this.equipment.boots;
+            this.equipment.boots = item;
+        } else if (item.type === "accessory") {
+            prevItem = this.equipment.accessory;
+            this.equipment.accessory = item;
         }
 
         // Remover de la mochila
@@ -314,6 +345,18 @@ export class Player {
         } else if (slotId === "equipCompanion" && this.equipment.companion) {
             item = this.equipment.companion;
             this.equipment.companion = null;
+        } else if (slotId === "equipHelmet" && this.equipment.helmet) {
+            item = this.equipment.helmet;
+            this.equipment.helmet = null;
+        } else if (slotId === "equipArmor" && this.equipment.armor) {
+            item = this.equipment.armor;
+            this.equipment.armor = null;
+        } else if (slotId === "equipBoots" && this.equipment.boots) {
+            item = this.equipment.boots;
+            this.equipment.boots = null;
+        } else if (slotId === "equipAccessory" && this.equipment.accessory) {
+            item = this.equipment.accessory;
+            this.equipment.accessory = null;
         }
 
         if (item) {
@@ -330,7 +373,73 @@ export class Player {
             this.hud.updateGold(item.value);
             this.inventory.splice(inventoryIndex, 1);
             if (this.sounds) this.sounds.playHit();
+        } else if (item.type === "consumable") {
+            if (item.heal) {
+                this.hp += item.heal;
+                if (this.hp > this.maxHp) this.hp = this.maxHp;
+                if (this.hud) this.hud.updateHealth(this.hp, this.maxHp);
+            }
+            if (item.energyRestore) {
+                this.energy += item.energyRestore;
+                if (this.energy > this.maxEnergy) this.energy = this.maxEnergy;
+                if (this.hud) this.hud.updateEnergy(this.energy, this.maxEnergy);
+            }
+            this.inventory.splice(inventoryIndex, 1);
+            if (this.sounds) this.sounds.playHit(); // Or a potion sound
         }
+    }
+
+    takeDamage(amount) {
+        if (this.isDead) return;
+
+        let finalDamage = amount;
+        
+        // Reducir daño si tiene escudo o armadura
+        if (this.isDefending && this.equipment.shield) {
+            finalDamage -= (this.equipment.shield.defense || 5);
+        }
+        if (this.equipment.armor) finalDamage -= (this.equipment.armor.defense || 2);
+        if (this.equipment.helmet) finalDamage -= (this.equipment.helmet.defense || 1);
+
+        if (finalDamage < 1) finalDamage = 1;
+
+        this.hp -= finalDamage;
+        if (this.hud) this.hud.updateHealth(this.hp, this.maxHp);
+
+        if (this.sounds) this.sounds.playHit();
+
+        // Efecto visual rojo de daño
+        const oldColor = this.mesh.material.emissiveColor ? this.mesh.material.emissiveColor.clone() : new BABYLON.Color3(0,0,0);
+        this.mesh.material.emissiveColor = new BABYLON.Color3(1, 0, 0);
+        
+        setTimeout(() => {
+            if (this.mesh && this.mesh.material && !this.isDead) {
+                this.mesh.material.emissiveColor = oldColor;
+            }
+        }, 200);
+
+        if (this.hp <= 0) {
+            this.hp = 0;
+            if (this.hud) this.hud.updateHealth(0, this.maxHp);
+            this.die();
+        }
+    }
+
+    die() {
+        if (this.isDead) return;
+        this.isDead = true;
+        this.canMove = false;
+        
+        // Animación de caer al suelo
+        const anim = new BABYLON.Animation("die", "rotation.x", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+        const keys = [{ frame: 0, value: this.mesh.rotation.x }, { frame: 30, value: this.mesh.rotation.x + Math.PI / 2 }];
+        anim.setKeys(keys);
+        this.mesh.animations = [anim];
+        this.scene.beginAnimation(this.mesh, 0, 30, false, 1, () => {
+            if (this.hud) {
+                setTimeout(() => this.hud.showGameOver(), 1000);
+            }
+        });
     }
 
     sellItem(index) {
@@ -345,6 +454,17 @@ export class Player {
     }
 
     attack(destructibles, enemies) {
+        const energyCost = this.heroType === "mago" ? 15 : 10;
+        
+        if (this.energy < energyCost) {
+            this.input.actionA = false;
+            // No hay suficiente energía, simplemente sale o puedes añadir un sonido de fallo
+            return;
+        }
+        
+        this.energy -= energyCost;
+        if (this.hud) this.hud.updateEnergy(this.energy, this.maxEnergy);
+
         this.isAttacking = true;
         
         if (this.heroType === "mago") {

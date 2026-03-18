@@ -117,60 +117,81 @@
 
   <!-- Capa HUD (Oculta al inicio) -->
   <div id="ui-layer" style="display: none;">
-    <div id="scoreDisplay">Oro: 0 | Nivel: 1</div>
-    <button id="btnPause" class="pause-btn" style="right: 70px;">⚙️</button>
-    <button id="btnExitGame" class="pause-btn" style="background: rgba(200,0,0,0.6); color: white; border-color: #ff5555; right: 15px;">🚪</button>
-    
-    <!-- El Ojo de los Ecos (Minimapa Mágico) -->
-    <div id="minimap-container">
-      <div id="minimap-content">
-        <!-- El jugador (Centro) -->
-        <div id="minimap-player"></div>
-        <!-- Puntos generados por JS -->
+  <div class="status-bars">
+    <div class="bar-container health-container">
+      <div id="healthBar" class="status-bar health-bar"></div>
+      <span id="healthText" class="bar-text">100/100</span>
+    </div>
+    <div class="bar-container energy-container">
+      <div id="energyBar" class="status-bar energy-bar"></div>
+      <span id="energyText" class="bar-text">100/100</span>
+    </div>
+  </div>
+
+  <div id="scoreDisplay">Oro: 0 | Nivel: 1</div>
+  <button id="btnPause" class="pause-btn" style="right: 70px;">⚙️</button>
+  <button id="btnExitGame" class="pause-btn" style="background: rgba(200,0,0,0.6); color: white; border-color: #ff5555; right: 15px;">🚪</button>
+
+  <!-- El Ojo de los Ecos (Minimapa Mágico) -->
+  <div id="minimap-container">
+    <div id="minimap-content">
+      <!-- El jugador (Centro) -->
+      <div id="minimap-player"></div>
+      <!-- Puntos generados por JS -->
+    </div>
+  </div>
+
+  <!-- Inventario (Bolso) -->
+  <div id="btnBackpack" class="backpack-btn">
+    🎒
+    <span id="backpackFill" class="backpack-badge">0</span>
+  </div>
+
+  <!-- Modal Mochila Mejorada -->
+  <div id="backpackModal" class="game-modal" style="display: none; pointer-events: auto; max-width: 650px; width: 95%;">
+    <div class="modal-header">
+      <span class="modal-title">🎒 Inventario</span>
+      <span class="modal-capacity"><span id="backpackCount">0</span>/30</span>
+      <button id="btnCloseBackpackTop" class="modal-close-btn">✖</button>
+    </div>
+
+    <div class="inventory-layout">
+      <!-- Sector Equipado -->
+      <div class="equipped-section">
+        <h3 class="section-title">Equipamiento</h3>
+        <div class="equip-grid">
+          <div class="item-slot equip-slot" id="equipWeapon" title="Arma"><span class="item-icon empty">🗡️</span><span class="item-name">Arma</span></div>
+          <div class="item-slot equip-slot" id="equipShield" title="Escudo"><span class="item-icon empty">🛡️</span><span class="item-name">Escudo</span></div>
+          <div class="item-slot equip-slot" id="equipHelmet" title="Casco"><span class="item-icon empty">🪖</span><span class="item-name">Casco</span></div>
+          <div class="item-slot equip-slot" id="equipArmor" title="Armadura"><span class="item-icon empty">🦺</span><span class="item-name">Armadura</span></div>
+          <div class="item-slot equip-slot" id="equipBoots" title="Botas"><span class="item-icon empty">👢</span><span class="item-name">Botas</span></div>
+          <div class="item-slot equip-slot" id="equipAccessory" title="Accesorio"><span class="item-icon empty">💍</span><span class="item-name">Accesorio</span></div>
+          <div class="item-slot equip-slot" id="equipCompanion" title="Compañero"><span class="item-icon empty">✨</span><span class="item-name">Compañero</span></div>
+        </div>
+      </div>
+
+      <!-- Sector Mochila -->
+      <div class="backpack-section">
+        <h3 class="section-title">Mochila</h3>
+        <div id="backpackItems" class="items-grid"></div>
       </div>
     </div>
 
-    <!-- Inventario (Bolso) -->
-    <div id="btnBackpack" class="backpack-btn">
-      🎒
-      <span id="backpackFill" class="backpack-badge">0</span>
-    </div>
-
-    <!-- Modal Mochila Mejorada -->
-    <div id="backpackModal" class="game-modal" style="display: none; pointer-events: auto; max-width: 650px; width: 95%;">
-      <div class="modal-header">
-        <span class="modal-title">🎒 Inventario</span>
-        <span class="modal-capacity"><span id="backpackCount">0</span>/30</span>
-        <button id="btnCloseBackpackTop" class="modal-close-btn">✖</button>
-      </div>
-
-      <div class="inventory-layout">
-        <!-- Sector Equipado -->
-        <div class="equipped-section">
-          <h3 class="section-title">Equipamiento</h3>
-          <div class="equip-grid">
-            <div class="item-slot equip-slot" id="equipWeapon" title="Arma"><span class="item-icon empty">🗡️</span><span class="item-name">Arma</span></div>
-            <div class="item-slot equip-slot" id="equipShield" title="Escudo"><span class="item-icon empty">🛡️</span><span class="item-name">Escudo</span></div>
-            <div class="item-slot equip-slot" id="equipCompanion" title="Compañero"><span class="item-icon empty">✨</span><span class="item-name">Compañero</span></div>
-          </div>
-        </div>
-
-        <!-- Sector Mochila -->
-        <div class="backpack-section">
-          <h3 class="section-title">Mochila</h3>
-          <div id="backpackItems" class="items-grid"></div>
-        </div>
-      </div>
-
-      <div class="modal-footer" style="justify-content: space-between;">
-        <div id="goldDisplayModal" style="color:#ffd700; font-weight:bold; font-size: 18px;">💰 Oro: 0</div>
-        <div style="display: flex; gap: 10px;">
-          <button id="btnSortBackpack" class="modal-btn" style="background: #2a3b4c;">Ordenar 🔄</button>
-          <button id="btnCloseBackpack" class="modal-btn" style="background: #4c2a2a;">Cerrar 🚪</button>
-        </div>
+    <div class="modal-footer" style="justify-content: space-between;">
+      <div id="goldDisplayModal" style="color:#ffd700; font-weight:bold; font-size: 18px;">💰 Oro: 0</div>
+      <div style="display: flex; gap: 10px;">
+        <button id="btnSortBackpack" class="modal-btn" style="background: #2a3b4c;">Ordenar 🔄</button>
+        <button id="btnCloseBackpack" class="modal-btn" style="background: #4c2a2a;">Cerrar 🚪</button>
       </div>
     </div>
+  </div>
 
+  <!-- Modal Muerte -->
+  <div id="gameOverModal" class="game-modal" style="display: none; pointer-events: auto; text-align: center; border-color: #ff0000; background: rgba(30, 0, 0, 0.95);">
+    <h1 style="color: #ff5555; font-size: 32px; margin-bottom: 10px; text-shadow: 2px 2px 0 #000;">¡HAS MUERTO!</h1>
+    <p style="color: #ccc; margin-bottom: 20px;">Tu alma pertenece ahora a Elyria.</p>
+    <button id="btnRestartGame" class="modal-btn" style="background: linear-gradient(to bottom, #880000, #440000); width: 100%; font-size: 20px; padding: 15px;">Resucitar</button>
+  </div>
     <!-- Modal Cofre -->
     <div id="chestModal" class="game-modal" style="display: none; pointer-events: auto;">
       <div class="modal-header">📦 Cofre Encontrado</div>

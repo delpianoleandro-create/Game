@@ -67,7 +67,9 @@ export class BaseEnemy {
             setTimeout(() => { if(this.mesh) this.mesh.position.y -= 0.5; }, 200);
 
             console.log(`${this.name} atacó al jugador por ${this.damage} de daño!`);
-            // Aquí en un futuro llamaremos a: target.takeDamage(this.damage);
+            if (target && target.takeDamage) {
+                target.takeDamage(this.damage);
+            }
             
             this.attackCooldown = 60; // Esperar 60 frames (1 segundo aprox) antes de volver a atacar
         }

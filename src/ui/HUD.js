@@ -1,4 +1,4 @@
-import { logger } from '../game.js?v=11';
+import { logger } from '../game.js?v=12';
 
 export class HUD {
     constructor() {
@@ -15,9 +15,15 @@ export class HUD {
 
         this.logModal = document.getElementById("logModal");
         this.logContent = document.getElementById("logContent");
-        
-        this.gold = 0;
-        this.level = 1;
+
+        this.healthBar = document.getElementById("healthBar");
+        this.healthText = document.getElementById("healthText");
+        this.energyBar = document.getElementById("energyBar");
+        this.energyText = document.getElementById("energyText");
+
+        this.gameOverModal = document.getElementById("gameOverModal");
+
+        this.gold = 0;        this.level = 1;
         this.player = null; // Se setea desde Player
         this.currentChest = null;
         
@@ -103,6 +109,40 @@ export class HUD {
             cloneDL.addEventListener("click", () => {
                 if (logger) logger.downloadReport();
             });
+        }
+
+        const btnRestartGame = document.getElementById("btnRestartGame");
+        if (btnRestartGame) {
+            this.replaceAndBind("btnRestartGame", () => {
+                this.gameOverModal.style.display = "none";
+                window.dispatchEvent(new Event("pauseGame"));
+                document.getElementById("ui-layer").style.display = "none";
+                document.getElementById("menu-layer").style.display = "flex";
+                document.getElementById("btnNewGame").click(); // Simular un clic para empezar nueva partida
+            });
+        }
+    }
+
+    showGameOver() {
+        if (this.player) this.player.canMove = false;
+        if (this.gameOverModal) {
+            this.gameOverModal.style.display = "block";
+        }
+    }
+
+    updateHealth(current, max) {
+        if (this.healthBar && this.healthText) {
+            const pct = Math.max(0, Math.min(100, (current / max) * 100));
+            this.healthBar.style.width = `${pct}%`;
+            this.healthText.textContent = `${Math.floor(current)}/${max}`;
+        }
+    }
+
+    updateEnergy(current, max) {
+        if (this.energyBar && this.energyText) {
+            const pct = Math.max(0, Math.min(100, (current / max) * 100));
+            this.energyBar.style.width = `${pct}%`;
+            this.energyText.textContent = `${Math.floor(current)}/${max}`;
         }
     }
 
@@ -211,6 +251,10 @@ export class HUD {
 
         renderEquipSlot("equipWeapon", equipment.weapon, "🗡️", "Arma");
         renderEquipSlot("equipShield", equipment.shield, "🛡️", "Escudo");
+        renderEquipSlot("equipHelmet", equipment.helmet, "🪖", "Casco");
+        renderEquipSlot("equipArmor", equipment.armor, "🦺", "Armadura");
+        renderEquipSlot("equipBoots", equipment.boots, "👢", "Botas");
+        renderEquipSlot("equipAccessory", equipment.accessory, "💍", "Accesorio");
         renderEquipSlot("equipCompanion", equipment.companion, "✨", "Compañero");
     }
 
