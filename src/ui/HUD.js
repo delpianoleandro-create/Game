@@ -182,14 +182,23 @@ export class HUD {
         items.forEach((item, index) => {
             const slot = document.createElement("div");
             slot.className = "item-slot";
-            slot.title = "Clic Izq: Equipar/Usar | Clic Der: Vender";
+            slot.title = "Toca para Equipar/Usar";
             slot.innerHTML = `
-                <span class="item-price">💰${item.value}</span>
+                <div class="sell-btn" title="Vender" data-index="${index}">💰${item.value}</div>
                 <span class="item-icon">${item.icon}</span>
                 <span class="item-name">${item.name}</span>
             `;
             
-            slot.onclick = () => {
+            slot.onclick = (e) => {
+                // Si hizo clic en el botón de vender, no hacemos el "equip"
+                if (e.target.classList.contains("sell-btn")) {
+                    if (this.player) {
+                        this.player.sellItem(index);
+                        this.updateInventory(this.player.inventory);
+                    }
+                    return;
+                }
+
                 if (this.player) {
                     if (item.type === "weapon" || item.type === "shield" || item.type === "companion_power") {
                         this.player.equipItem(index);
@@ -204,13 +213,6 @@ export class HUD {
                 }
             };
 
-            slot.oncontextmenu = (e) => {
-                e.preventDefault();
-                if (this.player) {
-                    this.player.sellItem(index);
-                    this.updateInventory(this.player.inventory);
-                }
-            };
             this.backpackItems.appendChild(slot);
         });
     }

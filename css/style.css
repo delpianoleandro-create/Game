@@ -385,6 +385,23 @@ canvas {
   padding: 2px 4px;
   border-radius: 3px;
 }
+.sell-btn {
+  position: absolute;
+  top: -8px; right: -8px;
+  background: #aa0000;
+  color: white;
+  font-size: 12px;
+  padding: 6px;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 10;
+  border: 2px solid #ff4444;
+  box-shadow: 0 0 5px #000;
+}
+.sell-btn:active {
+  transform: scale(0.9);
+  background: #ff0000;
+}
 .modal-footer {
   display: flex;
   justify-content: space-around;

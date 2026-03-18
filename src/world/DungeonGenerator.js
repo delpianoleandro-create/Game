@@ -139,20 +139,32 @@ export class DungeonGenerator {
     }
 
     createChest(name, itemType, x, y, z) {
-        // Base del cofre
-        const chest = BABYLON.MeshBuilder.CreateBox(name + "_base", { width: 1.5, height: 0.8, depth: 1 }, this.scene);
+        // Base del cofre (Más robusta)
+        const chest = BABYLON.MeshBuilder.CreateBox(name + "_base", { width: 1.2, height: 0.8, depth: 0.8 }, this.scene);
         chest.position.set(x, y - 0.1, z);
         chest.material = this.assets.getMaterial("wood");
         chest.checkCollisions = true;
 
-        // Tapa del cofre
-        const lid = BABYLON.MeshBuilder.CreateBox(name + "_lid", { width: 1.5, height: 0.2, depth: 1 }, this.scene);
-        lid.parent = chest;
-        lid.position.set(0, 0.5, 0); // Relativo a la base
-        lid.setPivotPoint(new BABYLON.Vector3(0, -0.1, 0.5)); // Pivote en la bisagra trasera
+        // Bisagra trasera
+        const hinge = new BABYLON.TransformNode(name + "_hinge", this.scene);
+        hinge.parent = chest;
+        hinge.position.set(0, 0.4, 0.4); 
+
+        // Tapa del cofre (Anclada a la bisagra)
+        const lid = BABYLON.MeshBuilder.CreateBox(name + "_lid", { width: 1.2, height: 0.3, depth: 0.8 }, this.scene);
+        lid.parent = hinge;
+        lid.position.set(0, 0.15, -0.4); 
         lid.material = this.assets.getMaterial("wood");
+
+        // Cerradura dorada
+        const lock = BABYLON.MeshBuilder.CreateBox(name + "_lock", { width: 0.2, height: 0.2, depth: 0.1 }, this.scene);
+        lock.parent = lid;
+        lock.position.set(0, -0.05, -0.4);
+        const goldMat = new BABYLON.StandardMaterial("goldMat", this.scene);
+        goldMat.diffuseColor = new BABYLON.Color3(1, 0.8, 0);
+        lock.material = goldMat;
         
-        chest.lidMesh = lid;
+        chest.lidMesh = hinge;
 
         const allItems = [
             { id: "espada", name: "Espada Larga", value: 50, icon: "⚔️", type: "weapon" },

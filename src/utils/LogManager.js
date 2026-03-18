@@ -3,6 +3,13 @@ export class LogManager {
         this.logs = [];
         this.startTime = Date.now();
         this.overrideConsole();
+        
+        window.addEventListener('error', (event) => {
+            this.addLog(`[ERROR FATAL] ${event.message} en ${event.filename}:${event.lineno}`, 'error');
+        });
+        window.addEventListener('unhandledrejection', (event) => {
+            this.addLog(`[RECHAZO ASYNC] ${event.reason}`, 'error');
+        });
     }
 
     overrideConsole() {

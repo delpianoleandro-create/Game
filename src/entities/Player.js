@@ -184,11 +184,28 @@ export class Player {
         if (!chests) return;
         for (let chest of chests) {
             const distance = BABYLON.Vector3.Distance(this.mesh.position, chest.position);
+            
+            // Lógica de resetear trigger de auto-abrir cuando nos alejamos
+            if (distance > 3.5) {
+                chest.metadata.canAutoTrigger = true;
+            }
+
             if (distance < 2.5) {
-                // Abrir automático la primera vez, o manual después
-                if (!chest.metadata.opened) {
-                    this.openChest(chest);
+                // Abrir automático la primera vez o si nos alejamos y volvimos
+                if (!chest.metadata.opened || chest.metadata.canAutoTrigger) {
+                    if (chest.metadata.items.length > 0) {
+                        chest.metadata.canAutoTrigger = false;
+                        this.openChest(chest);
+                    } else if (!chest.metadata.opened) {
+                        // Cofre virgen pero vacío? (raro, pero posible)
+                        chest.metadata.canAutoTrigger = false;
+                        this.openChest(chest);
+                    } else if (this.input.actionA && this.canMove) {
+                        this.input.actionA = false;
+                        this.showMessage("El cofre está vacío.");
+                    }
                 } else if (this.input.actionA && this.canMove) {
+                    // Manual (tocando el botón estando cerca)
                     this.input.actionA = false;
                     if (chest.metadata.items.length > 0) {
                         this.openChest(chest);
@@ -207,6 +224,7 @@ export class Player {
             // Animación de abrir cofre
             if (chest.lidMesh) {
                 const anim = new BABYLON.Animation("openLid", "rotation.x", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+                // Rotar -90 grados (-Math.PI / 2) hacia atrás
                 const keys = [{ frame: 0, value: 0 }, { frame: 15, value: -Math.PI / 2 }];
                 anim.setKeys(keys);
                 chest.lidMesh.animations = [anim];
