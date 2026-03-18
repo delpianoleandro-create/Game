@@ -1,4 +1,4 @@
-import { logger } from '../game.js?v=10';
+import { logger } from '../game.js?v=11';
 
 export class HUD {
     constructor() {
@@ -39,47 +39,71 @@ export class HUD {
         el.addEventListener("pointerdown", handler, { passive: false });
     }
 
-    initEvents() {
-        this.bindTap(this.btnBackpack, () => this.toggleBackpack());
-        this.bindTap(document.getElementById("btnCloseBackpack"), () => this.toggleBackpack(false));
-        this.bindTap(document.getElementById("btnCloseBackpackTop"), () => this.toggleBackpack(false));
+    replaceAndBind(id, action) {
+        let el = document.getElementById(id);
+        if (!el && id === "btnBackpack") el = this.btnBackpack;
+        if (!el) return;
+        
+        // Clonar para purgar event listeners de sesiones anteriores (evita bug de doble disparo al reiniciar)
+        const clone = el.cloneNode(true);
+        el.parentNode.replaceChild(clone, el);
+        
+        if (id === "btnBackpack") this.btnBackpack = clone;
+        
+        this.bindTap(clone, action);
+    }
 
-        this.bindTap(document.getElementById("btnSortBackpack"), () => {
+    initEvents() {
+        this.replaceAndBind("btnBackpack", () => this.toggleBackpack());
+        this.replaceAndBind("btnCloseBackpack", () => this.toggleBackpack(false));
+        this.replaceAndBind("btnCloseBackpackTop", () => this.toggleBackpack(false));
+
+        this.replaceAndBind("btnSortBackpack", () => {
             if (this.player) {
                 this.player.sortInventory();
                 this.updateInventory(this.player.inventory);
             }
         });
 
-        this.bindTap(document.getElementById("btnCloseChest"), () => {
+        this.replaceAndBind("btnCloseChest", () => {
             this.chestModal.style.display = "none";
             if (this.player) {
                 this.player.canMove = true;
             }
         });
 
-        this.bindTap(document.getElementById("btnLootAll"), () => {
+        this.replaceAndBind("btnLootAll", () => {
             if (this.player && this.currentChest) {
                 this.player.lootAll(this.currentChest);
             }
         });
+        
         // Logs events
         window.addEventListener("exitGame", () => {
             this.showLogs();
         });
 
-        document.getElementById("btnCloseLog").addEventListener("click", () => {
-            this.logModal.style.display = "none";
-            // Volver al menú principal
-            window.dispatchEvent(new Event("pauseGame"));
-            document.getElementById("ui-layer").style.display = "none";
-            document.getElementById("menu-layer").style.display = "flex";
-            document.getElementById("mainMenu").style.display = "block";
-        });
+        const btnCloseLog = document.getElementById("btnCloseLog");
+        if (btnCloseLog) {
+            const cloneLog = btnCloseLog.cloneNode(true);
+            btnCloseLog.parentNode.replaceChild(cloneLog, btnCloseLog);
+            cloneLog.addEventListener("click", () => {
+                this.logModal.style.display = "none";
+                window.dispatchEvent(new Event("pauseGame"));
+                document.getElementById("ui-layer").style.display = "none";
+                document.getElementById("menu-layer").style.display = "flex";
+                document.getElementById("mainMenu").style.display = "block";
+            });
+        }
 
-        document.getElementById("btnDownloadLog").addEventListener("click", () => {
-            if (logger) logger.downloadReport();
-        });
+        const btnDownloadLog = document.getElementById("btnDownloadLog");
+        if (btnDownloadLog) {
+            const cloneDL = btnDownloadLog.cloneNode(true);
+            btnDownloadLog.parentNode.replaceChild(cloneDL, btnDownloadLog);
+            cloneDL.addEventListener("click", () => {
+                if (logger) logger.downloadReport();
+            });
+        }
     }
 
     showLogs() {
@@ -198,7 +222,9 @@ export class HUD {
         if(this.backpackFill) this.backpackFill.textContent = count;
         if(this.backpackCount) this.backpackCount.textContent = count;
 
-        // Render backpack items        this.backpackItems.innerHTML = "";
+        // Render backpack items
+        if(this.backpackItems) this.backpackItems.innerHTML = "";
+        
         items.forEach((item, index) => {
             const slot = document.createElement("div");
             slot.className = "item-slot";
