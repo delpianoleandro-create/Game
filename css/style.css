@@ -214,6 +214,7 @@ canvas {
   background: rgba(80, 80, 80, 0.4);
   border: 2px solid rgba(255,255,255,0.2);
   border-radius: 50%;
+  z-index: 100;
 }
 #stick {
   position: absolute;
@@ -232,6 +233,7 @@ canvas {
   display: flex; justify-content: center; align-items: center;
   box-shadow: 0 4px 8px rgba(0,0,0,0.5);
   border: 2px solid rgba(255,255,255,0.2);
+  z-index: 100;
 }
 #actionA {
   bottom: 50px; right: 130px;
