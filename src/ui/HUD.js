@@ -1,4 +1,4 @@
-import { logger } from '../game.js?v=9';
+import { logger } from '../game.js?v=10';
 
 export class HUD {
     constructor() {
@@ -29,14 +29,14 @@ export class HUD {
         let lastTrigger = 0;
         const handler = (e) => {
             const now = Date.now();
-            if (now - lastTrigger < 300) return; 
+            if (now - lastTrigger < 500) return; // Incrementar debounce
             lastTrigger = now;
             if (e.cancelable) e.preventDefault();
             e.stopPropagation();
             action(e);
         };
-        el.addEventListener("touchstart", handler, { passive: false });
-        el.addEventListener("mousedown", handler);
+        // Usar EXCLUSIVAMENTE pointerdown para evitar doble firing de touchstart+mousedown
+        el.addEventListener("pointerdown", handler, { passive: false });
     }
 
     initEvents() {
