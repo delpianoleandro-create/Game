@@ -1,4 +1,4 @@
-import { logger } from '../game.js?v=8';
+import { logger } from '../game.js?v=9';
 
 export class HUD {
     constructor() {
@@ -192,14 +192,13 @@ export class HUD {
 
     updateInventory(items) {
         if(!items) return;
-        
+
         // Update button
-        const pct = Math.floor((items.length / 30) * 100);
-        if(this.backpackFill) this.backpackFill.textContent = `${pct}%`;
-        if(this.backpackCount) this.backpackCount.textContent = items.length;
-        
-        // Render backpack items
-        this.backpackItems.innerHTML = "";
+        const count = items.length;
+        if(this.backpackFill) this.backpackFill.textContent = count;
+        if(this.backpackCount) this.backpackCount.textContent = count;
+
+        // Render backpack items        this.backpackItems.innerHTML = "";
         items.forEach((item, index) => {
             const slot = document.createElement("div");
             slot.className = "item-slot";

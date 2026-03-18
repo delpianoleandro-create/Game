@@ -302,18 +302,48 @@ canvas {
 }
 
 /* Modals y Botones de Inventario */
-.inventory-btn {
+.backpack-btn {
   position: absolute;
-  top: 45px; left: 15px;
-  background: rgba(20, 20, 30, 0.8);
-  border: 2px solid #6b5c38;
-  color: #ffd700;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 16px;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 60px;
+  background: rgba(30, 20, 10, 0.85);
+  border: 3px solid #8b7c58;
+  border-radius: 50%;
+  color: white;
+  font-size: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 0 10px rgba(0,0,0,0.8);
   cursor: pointer;
-  z-index: 100;
+  z-index: 1000;
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.backpack-btn:active {
+  transform: translateX(-50%) scale(0.9);
+  border-color: #ffd700;
+}
+.backpack-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #d32f2f;
+  color: white;
+  border-radius: 50%;
+  min-width: 20px;
+  height: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 12px;
+  font-weight: bold;
+  border: 2px solid #fff;
+  font-family: sans-serif;
 }
 .game-modal {
   position: absolute;
