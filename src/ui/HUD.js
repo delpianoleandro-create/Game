@@ -1,4 +1,4 @@
-import { logger } from '../game.js?v=4';
+import { logger } from '../game.js?v=5';
 
 export class HUD {
     constructor() {
@@ -34,6 +34,12 @@ export class HUD {
         if (btnCloseBackpack) {
             btnCloseBackpack.addEventListener("click", () => this.toggleBackpack(false));
             btnCloseBackpack.addEventListener("touchstart", (e) => { e.preventDefault(); this.toggleBackpack(false); }, { passive: false });
+        }
+
+        const btnCloseBackpackTop = document.getElementById("btnCloseBackpackTop");
+        if (btnCloseBackpackTop) {
+            btnCloseBackpackTop.addEventListener("click", () => this.toggleBackpack(false));
+            btnCloseBackpackTop.addEventListener("touchstart", (e) => { e.preventDefault(); this.toggleBackpack(false); }, { passive: false });
         }
 
         const btnSortBackpack = document.getElementById("btnSortBackpack");
@@ -149,6 +155,8 @@ export class HUD {
 
     updateDisplay() {
         this.scoreDisplay.textContent = `Oro: ${this.gold} | Nivel: ${this.level}`;
+        const goldModal = document.getElementById("goldDisplayModal");
+        if(goldModal) goldModal.textContent = `💰 Oro: ${this.gold}`;
     }
 
     updateEquipment(equipment) {

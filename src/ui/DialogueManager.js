@@ -3,6 +3,7 @@ export class DialogueManager {
         this.box = document.getElementById("dialogueBox");
         this.nameElement = document.getElementById("dialogueName");
         this.textElement = document.getElementById("dialogueText");
+        this.avatarElement = document.getElementById("dialogueAvatar");
         
         this.dialogues = [];
         this.currentDialogIndex = 0;
@@ -14,6 +15,10 @@ export class DialogueManager {
 
         // Evento para avanzar diálogo al tocar la caja
         this.box.addEventListener("click", () => this.advanceDialogue());
+        this.box.addEventListener("touchstart", (e) => {
+            e.preventDefault();
+            this.advanceDialogue();
+        }, { passive: false });
     }
 
     startDialogue(dialogueArray, onComplete = null) {
@@ -36,6 +41,15 @@ export class DialogueManager {
         const current = this.dialogues[this.currentDialogIndex];
         this.nameElement.textContent = current.speaker;
         this.textElement.textContent = "";
+        
+        if (this.avatarElement) {
+            const speakerLow = current.speaker.toLowerCase();
+            let icon = "🗣️";
+            if (speakerLow.includes("sistema")) icon = "⚙️";
+            else if (speakerLow.includes("tú")) icon = "🧑";
+            else if (speakerLow.includes("voz")) icon = "👻";
+            this.avatarElement.textContent = icon;
+        }
         
         if (this.currentTimeout) {
             clearTimeout(this.currentTimeout);

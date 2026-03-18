@@ -1,6 +1,6 @@
-import { DungeonScene } from './scenes/DungeonScene.js?v=4';
-import { MenuManager } from './ui/MenuManager.js?v=4';
-import { LogManager } from './utils/LogManager.js?v=4';
+import { DungeonScene } from './scenes/DungeonScene.js?v=5';
+import { MenuManager } from './ui/MenuManager.js?v=5';
+import { LogManager } from './utils/LogManager.js?v=5';
 
 const canvas = document.getElementById("renderCanvas");
 const engine = new BABYLON.Engine(canvas, true);
