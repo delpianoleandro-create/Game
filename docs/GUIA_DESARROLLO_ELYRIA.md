@@ -46,27 +46,23 @@ El jugador es una malla geométrica de tipo Cápsula (`CreateCapsule`). Su altur
 ---
 
 ## 🎒 4. Sistema de Inventario y Objetos (Loot)
-**Archivos:** `Player.js`, `HUD.js` y `DungeonGenerator.js`
+**Archivos:** `src/data/ItemDatabase.js`, `Player.js`, `HUD.js` y `DungeonGenerator.js`
 
-El sistema pasó de usar simples textos (`"espada"`) a usar objetos de JavaScript estructurados. 
+El sistema ha evolucionado a una base de datos centralizada (`ItemDatabase.js`). Ya no se usan objetos sueltos creados al vuelo; todo se gestiona mediante identificadores únicos.
 
-### Estructura de un Objeto (Item):
+### Estructura de un Objeto (ItemDatabase.js):
 ```javascript
-{ id: "pocion_curacion", name: "Poción Mayor", value: 50, icon: "🧪" }
+"pocion_vida": { id: "pocion_vida", name: "Poción Vida", value: 15, icon: "🧪", type: "consumable", heal: 25 }
 ```
 
 ### ¿Cómo crear y añadir nuevos Objetos?
-1.  Ve a `src/world/DungeonGenerator.js`, dentro del método `createChest()`.
-2.  Busca el array `allItems` y añade tu nuevo objeto.
+1.  Abre `src/data/ItemDatabase.js`.
+2.  Añade tu nuevo objeto en el diccionario `items`:
     ```javascript
-    const allItems = [
-        { id: "espada", name: "Espada Larga", value: 50, icon: "⚔️" },
-        // ... otros ...
-        { id: "llave_dorada", name: "Llave del Jefe", value: 500, icon: "🔑" }
-    ];
+    "llave_dorada": { id: "llave_dorada", name: "Llave del Jefe", value: 500, icon: "🔑", type: "quest" }
     ```
-3.  El sistema de cofres elegirá aleatoriamente de esta lista (o los predefinidos). Cuando el jugador pulsa "Recoger", el objeto pasa al array `this.inventory` del Jugador y el HUD se actualiza automáticamente.
-4.  Para usar un objeto: En `Player.js` o `HUD.js` podrías añadir lógica en la función `sellItem` o crear una nueva función `useItem(index)` que compruebe el `id` y aplique el efecto (ej. sumar vida).
+3.  El motor `DungeonGenerator.js` llama automáticamente a `ItemDatabase.generateLoot()` para llenar los cofres aleatoriamente.
+4.  Para aplicar efectos al usarlos (Ej. curar vida), edita `src/entities/Player.js` en la función `useItem(inventoryIndex)` y añade lógica según el `item.type`.
 
 ---
 
@@ -142,4 +138,27 @@ Si añades paneles nuevos, asegúrate de añadirles `class="game-modal" style="p
 El sistema ha sido parcheado para garantizar una compatibilidad perfecta con dispositivos móviles y evitar fallos lógicos en la renderización de texto:
 
 1.  **Soporte Multi-táctil en el HUD:** Los botones de la mochila y de control (A, B) ahora escuchan tanto el evento `click` clásico (PC) como `touchstart` (Móviles). Se usa `e.preventDefault()` en los toques para evitar demoras (delays) comunes en los navegadores web móviles de 300ms, y evitar que el Canvas absorba el evento por error.
-2.  **Anti-Bleeding de Diálogos:** El efecto de "Máquina de escribir" (Typewriter) en `DialogueManager` ahora maneja asincronía segura. Anteriormente, si el jugador tocaba la pantalla rápidamente saltándose un texto, los `setTimeout` del diálogo anterior seguían ejecutándose (bleeding), causando textos mezclados, letras duplicadas o "letras de más". Ahora el sistema utiliza un `clearTimeout(this.currentTimeout)` absoluto para abortar limpiamente cualquier bucle de renderizado de texto antes de mostrar la siguiente línea de diálogo.
+2.  **Anti-Bleeding de Diálogos:** El efecto de "Máquina de escribir" (Typewriter) en `DialogueManager` ahora maneja asincronía segura mediante recortes de texto (`substring()`) e "IDs de Sesión". Esto aborta limpiamente cualquier hilo de texto huérfano antes de renderizar la siguiente línea de diálogo, evitando sobreescrituras en pantalla.
+3.  **Toques Fantasma (Ghost Clicks) y Dobles Eventos:** Al abrir modales como la Mochila, los navegadores emiten eventos táctiles y eventos de ratón superpuestos. Se ha reescrito `HUD.js` para usar la directiva `pointerdown` y "Debounce", impidiendo la ejecución de clics dobles que cerraban instantáneamente los menús o vaciaban accidentalmente los objetos. Adicionalmente, se forzó la "Clonación" profunda de nodos al iniciar nuevas partidas para depurar los *event listeners* viejos que desbordaban la memoria lógica.
+
+---
+
+## 📈 11. Escalabilidad (Añadir NPCs, Tiendas y Oro)
+El juego cuenta con un diseño basado en entidades agnósticas (Mundo → Chunk → Interfaz → Base de Datos), lo cual lo hace altamente escalable. Aquí está la hoja de ruta para soportar nuevas mecánicas económicas o enemigos:
+
+### A. Economía y Tiendas (Compra / Venta)
+*   **ItemDatabase.js:** Está preparado. Ya todos los objetos tienen su valor asignado en oro (`value`).
+*   **Mecánica de Venta:** Ya implementada. Cuando abres la mochila y tocas la etiqueta del precio de un objeto, `Player.sellItem(index)` se encarga de convertirlo en moneda, incrementando tu "Oro". 
+*   **Añadir Mercader (NPC):** Para incluir NPCs que vendan objetos:
+    1. Crea un modelo 3D estacionario en `DungeonGenerator.js` (como si fuera un cofre que no se abre).
+    2. En `Player.js -> checkInteractables`, cuando el jugador esté a < 3.0 de distancia y toque "A", dispara una llamada al HUD: `this.hud.showShop(npc.inventory)`.
+    3. Construye un nuevo Modal de Tienda (Copiado exactamente de `#chestModal`), pero añade botones de precio que reduzcan `this.player.gold` antes de pasarlo al inventario.
+
+### B. Salud, Vida y Consumibles (Pociones)
+1. Para curar vida o aumentar stats, abre `src/entities/Player.js` y ve a la función `useItem(index)`.
+2. Añade un condicional `if (item.type === 'consumable')`.
+3. Extrae la curación `this.hp += item.heal;` y retira el objeto llamando a `this.inventory.splice(index, 1);`.
+
+### C. Sistema Expandible de Enemigos y Diamantes
+*   **Enemigos:** La clase `src/entities/enemies/BaseEnemy.js` abstrae totalmente la física y vida. Para hacer un Troll Gigante, basta crear un archivo nuevo, extender esa clase, aumentar la `saludBase` y su tamaño de renderizado (`mesh.scaling.set(3, 3, 3)`).
+*   **Diamantes/Moneda Premium:** Así como el "Oro" actual se actualiza llamando a `hud.updateGold()`, simplemente añade un nuevo cuadro al HUD HTML (ej. `💎 Diamantes: 0`) e invoca `hud.updateDiamonds()` cuando el jugador recoja objetos valiosos tipo `"valuable"` o `"premium"` creados dentro del `ItemDatabase.js`.
