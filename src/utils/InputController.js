@@ -2,11 +2,37 @@ export class InputController {
     constructor() {
         this.joyX = 0;
         this.joyY = 0;
-        this.actionA = false; // Ataque
-        this.actionB = false; // Defensa
+        this.actionA = false; 
+        this.actionB = false; 
 
         this.initJoystick();
         this.initButtons();
+        this.initKeyboard();
+    }
+
+    initKeyboard() {
+        document.addEventListener("keydown", (e) => this.handleKeyDown(e));
+        document.addEventListener("keyup", (e) => this.handleKeyUp(e));
+    }
+
+    handleKeyDown(e) {
+        switch (e.code) {
+            case "KeyW": case "ArrowUp": this.joyY = 1; break;
+            case "KeyS": case "ArrowDown": this.joyY = -1; break;
+            case "KeyA": case "ArrowLeft": this.joyX = -1; break;
+            case "KeyD": case "ArrowRight": this.joyX = 1; break;
+            case "Space": this.actionA = true; break;
+            case "ShiftLeft": case "ShiftRight": this.actionB = true; break;
+        }
+    }
+
+    handleKeyUp(e) {
+        switch (e.code) {
+            case "KeyW": case "ArrowUp": case "KeyS": case "ArrowDown": this.joyY = 0; break;
+            case "KeyA": case "ArrowLeft": case "KeyD": case "ArrowRight": this.joyX = 0; break;
+            case "Space": this.actionA = false; break;
+            case "ShiftLeft": case "ShiftRight": this.actionB = false; break;
+        }
     }
 
     initJoystick() {

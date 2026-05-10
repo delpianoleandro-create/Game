@@ -14,6 +14,12 @@ export class ShooterController {
         this.camera.angularSensibilityX = 1000;
         this.camera.angularSensibilityY = 1000;
         this.camera.panningSensibility = 0;
+
+        // Deshabilitar control por teclado de cámara
+        this.camera.keysUp = [];
+        this.camera.keysDown = [];
+        this.camera.keysLeft = [];
+        this.camera.keysRight = [];
     }
 
     update() {
